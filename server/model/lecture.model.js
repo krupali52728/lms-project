@@ -8,22 +8,27 @@ const lectureSchema = new mongoose.Schema(
       ref: "Course",
       required: true,
     },
+    chapter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chapter",
+      required: true,
+    },
     title: {
       type: String,
       required: true,
     },
     videoUrl: {
       type: String,
-      
+      required: true,
     },
     duration: {
       type: String,
       required: true,
-    }, 
+    },
     order: {
       type: Number,
       required: true,
-    }, 
+    },
   },
   { timestamps: true }
 );

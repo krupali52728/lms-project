@@ -14,20 +14,43 @@ const courseSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
     thumbnail: {
       type: String,
-      required: true,
     },
     educator: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    
+
     isPublished: {
       type: Boolean,
       default: false,
     },
+    ratings: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        rating: {
+          type: Number,
+          min: 1,
+          max: 5,
+        },
+        review: String,
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     enrolledStudents: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -41,9 +64,15 @@ const courseSchema = new mongoose.Schema(
       },
     ],
     totalDuration: {
-      type: String,
+      type: Number,
       required: true,
     },
+    chapters: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Chapter",
+      },
+    ],
   },
   { timestamps: true }
 );

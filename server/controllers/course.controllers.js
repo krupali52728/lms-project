@@ -1,0 +1,179 @@
+import Course from "../model/course.model.js";
+import Chapter from "../model/chapter.model.js";
+import Lecture from "../model/lecture.model.js";
+import User from "../model/user.model.js";
+
+//create course
+export const createCourse = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      price,
+      discount,
+      thumbnail,
+      totalDuration,
+      chapters,
+    } = req.body;
+    const { userId } = req.user;
+
+    const educator = await User.findById(userId);
+    if (!educator || educator.role !== "educator") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only educators can create courses" });
+    }
+
+    // Create the course
+    const course = new Course({
+      title,
+      description,
+      price,
+      discount: discount || 0,
+      thumbnail,
+      educator: userId,
+      totalDuration,
+      chapters: [],
+    });
+
+    await course.save();
+    res.status(201).json({ success: true, course });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// get all course
+export const getAllCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({ isPublished: true })
+      .populate("educator", "name email avatar")
+      .populate("chapters")
+      .sort({ createdAt: -1 });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+//delete the course
+
+export const deleteCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { userId } = req.user;
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
+    }
+    if (course.educator.toString() !== userId) {
+      return res.status(404).json({
+        success: false,
+        message: "You are not authorized to delete this course",
+      });
+    }
+
+    // delete related chapter and lectures
+    await Chapter.deleteMany({ course: courseId });
+    await Lecture.deleteMany({ course: courseId });
+    await Course.findByIdAndDelete(courseId);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Course deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Enroll student in course
+export const enrollInCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { userId } = req.user;
+
+    const course = await Course.findById(courseId);
+    const user = await User.findById(userId);
+
+    if (!course) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
+    }
+
+    if (user.role !== "student") {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Only students can enroll in courses",
+        });
+    }
+
+    // Check if already enrolled
+    if (course.enrolledStudents.includes(userId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Already enrolled in this course" });
+    }
+
+    // Add student to course
+    course.enrolledStudents.push(userId);
+    await course.save();
+
+    // Add course to user's enrolled courses
+    user.enrolledCourse.push(courseId);
+    await user.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Successfully enrolled in course" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// get course by educator
+export const getCourseEducator = async (req, res) => {
+  try {
+    const { userId } = req.user;
+
+    const courses = await Course.find({ educator: userId })
+      .populate("chapters")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, courses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Publish/Unpublish course
+export const togglePublishCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { userId } = req.user;
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    if (course.educator.toString() !== userId) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    course.isPublished = !course.isPublished;
+    await course.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Course ${course.isPublished ? 'published' : 'unpublished'} successfully`,
+      course 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
