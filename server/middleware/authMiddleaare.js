@@ -4,7 +4,6 @@ import User from '../model/user.model.js';
 export const authenticate = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies?.token;
-    
     if (!token) {
       return res.status(401).json({ 
         success: false, 
@@ -12,16 +11,22 @@ export const authenticate = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
-    
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN);
+    // Accept both 'userId' and 'id' for compatibility
+    const userId = decoded.userId || decoded.id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid token payload' 
+      });
+    }
+    const user = await User.findById(userId).select('-password');
     if (!user) {
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid token' 
       });
     }
-
     req.user = { userId: user._id, role: user.role };
     next();
   } catch (error) {

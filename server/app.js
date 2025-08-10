@@ -23,7 +23,6 @@ app.use('/api/auth',authRouter);
 
 app.use('/api/user', userRouter);
 
-
 app.listen(PORT,()=>{
     console.log("Server Started on port", PORT);
 });
