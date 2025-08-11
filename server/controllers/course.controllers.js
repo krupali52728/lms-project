@@ -50,6 +50,8 @@ export const getAllCourses = async (req, res) => {
       .populate("educator", "name email avatar")
       .populate("chapters")
       .sort({ createdAt: -1 });
+    
+    res.status(200).json({ success: true, courses });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

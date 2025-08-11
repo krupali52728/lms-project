@@ -5,7 +5,7 @@ import { authenticate } from "../middleware/authMiddleaare.js";
 const userRouter = express.Router();
 
 userRouter.get('/profile',authenticate, getUserData); 
-userRouter.post('/enroll/:courseId', userEnrollCourse);
+userRouter.post('/enroll/:courseId',authenticate, userEnrollCourse);
 
 export default userRouter;
 

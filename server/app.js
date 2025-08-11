@@ -4,6 +4,7 @@ import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudnary.js';
 import authRouter from './routes/auth.routes.js';
 import userRouter from './routes/user.routes.js';
+import courseRouter from './routes/course.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth',authRouter);
 
 app.use('/api/user', userRouter);
+
+app.use('/api/course',courseRouter);
 
 app.listen(PORT,()=>{
     console.log("Server Started on port", PORT);
