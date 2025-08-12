@@ -66,25 +66,31 @@ export const deleteCourse = async (req, res) => {
 
     const course = await Course.findById(courseId);
     if (!course) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Course not found" });
+      return res.status(404).json({ success: false, message: "Course not found" });
     }
-    if (course.educator.toString() !== userId) {
-      return res.status(404).json({
-        success: false,
-        message: "You are not authorized to delete this course",
+
+    // Debug: Log the values being compared
+    // console.log('User ID from token:', userId);
+    // console.log('User ID type:', typeof userId);
+    // console.log('Course educator ID:', course.educator);
+    // console.log('Course educator ID type:', typeof course.educator);
+    // console.log('Course educator toString():', course.educator.toString());
+    // console.log('Are they equal?:', course.educator.toString() === userId.toString());
+
+    // Check if user is the educator of this course
+    if (course.educator.toString() !== userId.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "You are not authorized to delete this course" 
       });
     }
 
-    // delete related chapter and lectures
+    // Delete related chapters and lectures
     await Chapter.deleteMany({ course: courseId });
     await Lecture.deleteMany({ course: courseId });
     await Course.findByIdAndDelete(courseId);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Course deleted successfully" });
+    res.status(200).json({ success: true, message: "Course deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -163,7 +169,12 @@ export const togglePublishCourse = async (req, res) => {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
 
-    if (course.educator.toString() !== userId) {
+    // Debug: Log the values being compared
+    // console.log('User ID from token:', userId);
+    // console.log('Course educator ID:', course.educator.toString());
+    // console.log('User role:', req.user.role);
+
+    if (course.educator.toString() !== userId.toString()) {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 

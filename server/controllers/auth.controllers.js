@@ -19,9 +19,14 @@ export const register = async (req, res) => {
     const user = new User({ name, email, password: hashpassword });
     await user.save();
     
-    const token = jwt.sign({ id: user._id }, process.env.JWT_TOKEN, {
-      expiresIn: "10d",
-    });
+    const token = jwt.sign(
+      { 
+        id: user._id,
+        role: user.role  
+      }, 
+      process.env.JWT_TOKEN, 
+      { expiresIn: "10d" }
+    );
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -56,7 +61,13 @@ export const login = async (req, res) => {
       return res.json({ success: false, message: "Invalid Password.." });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_TOKEN);
+    const token = jwt.sign(
+      { 
+        id: user._id,
+        role: user.role  
+      }, 
+      process.env.JWT_TOKEN
+    );
     console.log("Token:", token);
     res.cookie("token", token, {
       httpOnly: true,

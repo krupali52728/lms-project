@@ -108,9 +108,49 @@ export const userEnrollCourse = async (req, res) => {
 };
 
 //user purshase course 
+export const userPurchaseCourse = async (req, res) => {
+  try {
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
 
-// user course Progress
+// uodate UserCourseProgress
+export const updateUserCourseProgress = async (req, res) =>{
+  try {
+    
+  } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+  }
+}
 
 // get userCourseProgress
+export const getUserCourseProgress = async(req,res)=>{
+  try {
+    
+  } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+  }
+}
 
 // addUserRating
+export const userRating = async(req,res) =>{
+  try {
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });    
+  } 
+}

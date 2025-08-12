@@ -17,7 +17,7 @@ export const createLecture = async (req, res) => {
         .json({ success: false, message: "Course not found" });
     }
 
-    if (course.educator.toString() !== userId) {
+    if (course.educator.toString() !== userId.toString()) {
       return res
         .status(403)
         .json({
@@ -155,7 +155,7 @@ export const deleteLecture = async (req, res) => {
     }
 
     // Check if user is the educator of this course
-    if (lecture.course.educator.toString() !== userId) {
+    if (lecture.course.educator.toString() !== userId.toString()) {
       return res
         .status(403)
         .json({
@@ -199,7 +199,7 @@ export const reorderLectures = async (req, res) => {
     }
 
     // Check if user is the educator of this course
-    if (chapter.course.educator.toString() !== userId) {
+    if (chapter.course.educator.toString() !== userId.toString()) {
       return res
         .status(403)
         .json({

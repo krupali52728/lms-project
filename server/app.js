@@ -5,6 +5,8 @@ import connectCloudinary from './config/cloudnary.js';
 import authRouter from './routes/auth.routes.js';
 import userRouter from './routes/user.routes.js';
 import courseRouter from './routes/course.routes.js';
+import chapterRouter from './routes/chapter.routes.js';
+import lectureRouter from './routes/lecture.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +27,10 @@ app.use('/api/auth',authRouter);
 app.use('/api/user', userRouter);
 
 app.use('/api/course',courseRouter);
+
+app.use('/api/chapter', chapterRouter);
+
+app.use('/api/lecture', lectureRouter);
 
 app.listen(PORT,()=>{
     console.log("Server Started on port", PORT);
