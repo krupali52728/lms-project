@@ -2,6 +2,7 @@ import Course from "../model/course.model.js";
 import Chapter from "../model/chapter.model.js";
 import Lecture from "../model/lecture.model.js";
 import User from "../model/user.model.js";
+import express from "express";
 
 //create course
 export const createCourse = async (req, res) => {
@@ -111,7 +112,7 @@ export const enrollInCourse = async (req, res) => {
         .json({ success: false, message: "Course not found" });
     }
 
-    if (user.role !== "student") {
+    if (user.role !== "student" && user.role !== "educator") {
       return res
         .status(403)
         .json({
@@ -139,7 +140,7 @@ export const enrollInCourse = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Successfully enrolled in course" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message:error.message });
   }
 };
 

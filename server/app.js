@@ -7,6 +7,7 @@ import userRouter from './routes/user.routes.js';
 import courseRouter from './routes/course.routes.js';
 import chapterRouter from './routes/chapter.routes.js';
 import lectureRouter from './routes/lecture.routes.js';
+import videoRouter from './routes/video.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,8 @@ app.get('/', (req, res) => {
 });
 
 // all API Endpoints
+app.use('/api/video',videoRouter);
+
 app.use('/api/auth',authRouter);
 
 app.use('/api/user', userRouter);
