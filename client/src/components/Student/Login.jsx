@@ -11,7 +11,6 @@ import {
   AlertCircle,
   User
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -23,8 +22,6 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState('');
-
-  const { login } = useAuth();
 
   const validateForm = () => {
     const newErrors = {};
@@ -71,17 +68,16 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
+      // Simulate form submission
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Call login from context
-      login({
-        name: 'John Doe',
-        email: formData.email,
-        avatar: null
-      });
-      
       console.log('Login successful:', formData);
+      
+      // Reset form
+      setFormData({
+        email: '',
+        password: '',
+        rememberMe: false
+      });
     } catch (error) {
       setErrors({ submit: 'Login failed. Please try again.' });
     } finally {
@@ -327,7 +323,7 @@ const Login = () => {
           <div className="mt-8 text-center">
             <p className="text-slate-400">
               Don't have an account?{' '}
-              <a href="#" className="font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200">
+              <a href="/signup" className="font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200">
                 Sign up here
               </a>
             </p>
