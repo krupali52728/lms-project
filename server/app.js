@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudnary.js';
 import authRouter from './routes/auth.routes.js';
@@ -13,6 +14,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 dotenv.config();
+
+// CORS configuration
+app.use(cors({
+  origin: 'http://localhost:5173', // Vite default port
+  credentials: true
+}));
+
 app.use(express.json());
 
 connectDB();

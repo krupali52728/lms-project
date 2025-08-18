@@ -4,8 +4,7 @@ import Navbar from '../components/Student/Navbar';
 import Footer from '../components/Student/Footer';
 import Companies from '../components/Student/Companies';
 import StudentFeedback from '../components/Student/StudentFeedback';
-import CourseCard from '../components/Student/CourseCard';
-import CoursesSection from '../components/Student/CourseSection';
+import CoursesSection from '../components/course/CoursesSection';
 
 const Home = () => {
   return (
@@ -23,7 +22,7 @@ const Home = () => {
         <StudentFeedback />
 
         {/* Courses Section */}
-            <CoursesSection />
+        <CoursesSection />
 
            
       </main>

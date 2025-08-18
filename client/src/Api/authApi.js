@@ -1,0 +1,34 @@
+import api from "./config.js";
+
+//  Register User
+export const registerUser = async (userData) => {
+  try {
+    const res = await api.post("/auth/register", userData);
+    return res.data;
+  } catch (error) {
+    console.error("Register error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
+//  Login User
+export const loginUser = async (credentials) => {
+  try {
+    const res = await api.post("/auth/login", credentials);
+    return res.data;
+  } catch (error) {
+    console.error("Login error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
+//  Logout User
+export const logoutUser = async () => {
+  try {
+    const res = await api.post("/auth/logout");
+    return res.data;
+  } catch (error) {
+    console.error("Logout error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};

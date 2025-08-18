@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Mail, 
   Lock, 
@@ -12,6 +13,8 @@ import {
   Phone,
   CheckCircle
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { registerUser } from '../../Api/authApi.js';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -28,6 +31,9 @@ const SignUp = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState('');
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
@@ -109,22 +115,40 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Sign up successful:', formData);
+      // Prepare data for API call
+      const userData = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        password: formData.password
+      };
+
+      // Call the real register API
+      const response = await registerUser(userData);
       
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: '',
-        agreeToTerms: false
-      });
+      if (response.success) {
+        // Use AuthContext login method to automatically log in user
+        login(response.token);
+        
+        // Reset form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          password: '',
+          confirmPassword: '',
+          agreeToTerms: false
+        });
+        
+        // Redirect to home page
+        navigate('/');
+        
+      } else {
+        setErrors({ submit: response.message || 'Registration failed. Please try again.' });
+      }
     } catch (error) {
-      setErrors({ submit: 'Registration failed. Please try again.' });
+      console.error('Registration error:', error);
+      setErrors({ submit: error.message || 'Registration failed. Please try again.' });
     } finally {
       setIsLoading(false);
     }

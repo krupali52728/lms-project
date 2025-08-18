@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Mail, 
   Lock, 
@@ -11,6 +12,8 @@ import {
   AlertCircle,
   User
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { loginUser } from '../../Api/authApi.js';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +25,9 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState('');
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
@@ -68,18 +74,32 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Login successful:', formData);
-      
-      // Reset form
-      setFormData({
-        email: '',
-        password: '',
-        rememberMe: false
+      // Call the real login API
+      const response = await loginUser({
+        email: formData.email,
+        password: formData.password
       });
+      
+      if (response.success) {
+        // Use AuthContext login method
+        login(response.token);
+        
+        // Reset form
+        setFormData({
+          email: '',
+          password: '',
+          rememberMe: false
+        });
+        
+        // Redirect to home page
+        navigate('/');
+        
+      } else {
+        setErrors({ submit: response.message || 'Login failed. Please try again.' });
+      }
     } catch (error) {
-      setErrors({ submit: 'Login failed. Please try again.' });
+      console.error('Login error:', error);
+      setErrors({ submit: error.message || 'Login failed. Please try again.' });
     } finally {
       setIsLoading(false);
     }
