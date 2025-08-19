@@ -123,10 +123,16 @@ const Navbar = () => {
                     className="flex items-center space-x-3 p-3 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   >
                     <div className="relative">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg ${
+                        user?.role === 'educator' 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
+                          : 'bg-gradient-to-r from-blue-600 to-purple-600'
+                      }`}>
                         <User className="w-5 h-5 text-white" />
                       </div>
-                      
+                      <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-950 ${
+                        user?.role === 'educator' ? 'bg-purple-500' : 'bg-green-500'
+                      }`}></div>
                     </div>
                     
                     <ChevronDown
@@ -149,7 +155,11 @@ const Navbar = () => {
                         {/* User Info Header */}
                         <div className="p-6 bg-gradient-to-r from-blue-600/10 to-purple-600/10 border-b border-slate-700/50">
                           <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                              user?.role === 'educator' 
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
+                                : 'bg-gradient-to-r from-blue-600 to-purple-600'
+                            }`}>
                               <User className="w-6 h-6 text-white" />
                             </div>
                             <div>
@@ -158,8 +168,10 @@ const Navbar = () => {
                               </p>
                               <p className="text-slate-400 text-sm">{user?.email}</p>
                               <div className="flex items-center space-x-1 mt-1">
-                                
-                               
+                                <div className={`w-2 h-2 rounded-full ${user?.role === 'educator' ? 'bg-purple-500' : 'bg-blue-500'}`}></div>
+                                <span className={`text-xs font-medium capitalize ${user?.role === 'educator' ? 'text-purple-400' : 'text-blue-400'}`}>
+                                  {user?.role || 'Student'}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -167,20 +179,50 @@ const Navbar = () => {
 
                         {/* Navigation Links */}
                         <div className="p-2">
-                          <Link
-                            to="/student/dashboard"
-                            onClick={() => setShowProfileDropdown(false)}
-                            className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
-                          >
-                            <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                            <div>
-                              <span className="font-medium">Dashboard</span>
-                              <p className="text-xs text-slate-500">View your courses</p>
-                            </div>
-                          </Link>
+                          {user?.role === 'educator' ? (
+                            // Educator Navigation
+                            <>
+                              <Link
+                                to="/educator/dashboard"
+                                onClick={() => setShowProfileDropdown(false)}
+                                className="flex items-center space-x-3 p-4 text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                              >
+                                <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                                <div>
+                                  <span className="font-medium">Educator Dashboard</span>
+                                  <p className="text-xs text-slate-500">Manage your courses</p>
+                                </div>
+                              </Link>
+                              
+                              <Link
+                                to="/educator/courses"
+                                onClick={() => setShowProfileDropdown(false)}
+                                className="flex items-center space-x-3 p-4 text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                              >
+                                <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                                <div>
+                                  <span className="font-medium">My Courses</span>
+                                  <p className="text-xs text-slate-500">Create & edit courses</p>
+                                </div>
+                              </Link>
+                            </>
+                          ) : (
+                            // Student Navigation
+                            <Link
+                              to="/student/dashboard"
+                              onClick={() => setShowProfileDropdown(false)}
+                              className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                            >
+                              <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                              <div>
+                                <span className="font-medium">Student Dashboard</span>
+                                <p className="text-xs text-slate-500">View your courses</p>
+                              </div>
+                            </Link>
+                          )}
                           
                           <Link
-                            to="/student/account"
+                            to={user?.role === 'educator' ? "/educator/account" : "/student/account"}
                             onClick={() => setShowProfileDropdown(false)}
                             className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
                           >
@@ -271,29 +313,59 @@ const Navbar = () => {
                     {/* User Info */}
                     <div className="p-4 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-xl border border-slate-700/50">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user?.role === 'educator' ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-gradient-to-r from-blue-600 to-purple-600'}`}>
                           <User className="w-5 h-5 text-white" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-white font-medium">{user?.name || "User"}</p>
                           <p className="text-slate-400 text-sm">{user?.email}</p>
+                          <div className="flex items-center space-x-1 mt-1">
+                            <div className={`w-2 h-2 rounded-full ${user?.role === 'educator' ? 'bg-purple-500' : 'bg-blue-500'}`}></div>
+                            <span className={`text-xs font-medium capitalize ${user?.role === 'educator' ? 'text-purple-400' : 'text-blue-400'}`}>
+                              {user?.role || 'Student'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Navigation Links */}
                     <div className="space-y-2">
-                      <Link
-                        to="/student/dashboard"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
-                      >
-                        <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Dashboard</span>
-                      </Link>
+                      {user?.role === 'educator' ? (
+                        // Educator Mobile Navigation
+                        <>
+                          <Link
+                            to="/educator/dashboard"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center space-x-3 p-4 text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                          >
+                            <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">Educator Dashboard</span>
+                          </Link>
+                          
+                          <Link
+                            to="/educator/courses"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center space-x-3 p-4 text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                          >
+                            <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                            <span className="font-medium">My Courses</span>
+                          </Link>
+                        </>
+                      ) : (
+                        // Student Mobile Navigation
+                        <Link
+                          to="/student/dashboard"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                        >
+                          <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="font-medium">Student Dashboard</span>
+                        </Link>
+                      )}
                       
                       <Link
-                        to="/student/account"
+                        to={user?.role === 'educator' ? "/educator/account" : "/student/account"}
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
                       >

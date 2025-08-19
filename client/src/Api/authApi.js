@@ -32,3 +32,14 @@ export const logoutUser = async () => {
     throw error.response?.data || { message: "Something went wrong" };
   }
 };
+
+// educator routes
+export const getEducatorProfile = async () => {
+  try {
+    const res = await api.get("/auth/educator/profile");
+    return res.data;
+  } catch (error) {
+    console.error("Get educator profile error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};

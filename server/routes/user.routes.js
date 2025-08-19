@@ -25,6 +25,8 @@ userRouter.get('/progress/:courseId', authenticate, authorize('student','educato
 // Course rating routes (students only)
 userRouter.post('/rating/:courseId', authenticate, authorize('student','educator'), userRating);
 
+
+
 export default userRouter;
 
 

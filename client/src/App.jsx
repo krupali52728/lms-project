@@ -10,6 +10,7 @@ import CourseDetails from './components/course/CourseDetails.jsx';
 import StudentAccount from './components/Student/StudentAccount.jsx';
 import StudentDashboard from './components/Student/StudentDashboard.jsx';
 import EducatorDashboard from './components/Educator/EducatorDashboard.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 
 import './index.css';
@@ -28,7 +29,30 @@ function App() {
             <Route path="/course/:id" element={<CourseDetails />} />
             <Route path="/student/account" element={<StudentAccount />} />
             <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route path="/educator/dashboard" element={<EducatorDashboard />} />
+            <Route 
+              path="/educator/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['educator']}>
+                  <EducatorDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/educator/courses" 
+              element={
+                <ProtectedRoute allowedRoles={['educator']}>
+                  <EducatorDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/educator/account" 
+              element={
+                <ProtectedRoute allowedRoles={['educator']}>
+                  <StudentAccount />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
         </div>
         

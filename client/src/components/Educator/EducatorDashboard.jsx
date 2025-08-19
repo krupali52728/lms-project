@@ -66,42 +66,7 @@ const EducatorDashboard = () => {
       lessons: 45,
       completionRate: 78
     },
-    {
-      id: 2,
-      title: 'Advanced JavaScript Concepts',
-      description: 'Master advanced JavaScript concepts including closures, prototypes, and async programming.',
-      thumbnail: '/api/placeholder/300/200',
-      price: 79.99,
-      students: 245,
-      rating: 4.9,
-      reviews: 89,
-      category: 'Programming',
-      difficulty: 'Advanced',
-      duration: '8h 45m',
-      status: 'published',
-      created: '2023-11-15',
-      lastUpdated: '2024-01-10',
-      lessons: 32,
-      completionRate: 85
-    },
-    {
-      id: 3,
-      title: 'UI/UX Design Fundamentals',
-      description: 'Learn the fundamentals of user interface and user experience design.',
-      thumbnail: '/api/placeholder/300/200',
-      price: 69.99,
-      students: 189,
-      rating: 4.7,
-      reviews: 67,
-      category: 'Design',
-      difficulty: 'Beginner',
-      duration: '6h 15m',
-      status: 'draft',
-      created: '2024-01-01',
-      lastUpdated: '2024-01-18',
-      lessons: 28,
-      completionRate: 0
-    }
+    
   ];
 
   const fadeInUp = {
