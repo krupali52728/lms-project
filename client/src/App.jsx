@@ -10,10 +10,16 @@ import CourseDetails from './components/course/CourseDetails.jsx';
 import StudentAccount from './components/Student/StudentAccount.jsx';
 import StudentDashboard from './components/Student/StudentDashboard.jsx';
 import EducatorDashboard from './components/Educator/EducatorDashboard.jsx';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
+import EducatorLayout from './components/layouts/EducatorLayout.jsx';
+import StudentLayout from './components/layouts/StudentLayout.jsx';
 
 
 import './index.css';
+import EducatorAddCourse from './components/Educator/EducatorAddCourse.jsx';
+import EducatorAllCourse from './components/Educator/EducatorAllCourse.jsx';
+import EducatorEditAndDeleteCourse from './components/Educator/EducatorEditAndDeleteCourse.jsx';
+import EducatorAnalytics from './components/Educator/EducatorAnalytics.jsx';
+import EducatorStudents from './components/Educator/EducatorStudents.jsx';
 
 function App() {
   return (
@@ -27,32 +33,23 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/search" element={<Search />} />
             <Route path="/course/:id" element={<CourseDetails />} />
-            <Route path="/student/account" element={<StudentAccount />} />
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route 
-              path="/educator/dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={['educator']}>
-                  <EducatorDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/educator/courses" 
-              element={
-                <ProtectedRoute allowedRoles={['educator']}>
-                  <EducatorDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/educator/account" 
-              element={
-                <ProtectedRoute allowedRoles={['educator']}>
-                  <StudentAccount />
-                </ProtectedRoute>
-              } 
-            />
+            
+            {/* Student Routes - Protected by StudentLayout */}
+            <Route path="/student" element={<StudentLayout />}>
+              <Route path="account" element={<StudentAccount />} />
+              <Route path="dashboard" element={<StudentDashboard />} />
+            </Route>
+
+            {/* Educator Routes - Protected by EducatorLayout */}
+            <Route path="/educator" element={<EducatorLayout />}>
+              <Route index element={<EducatorDashboard />} />
+              <Route path="dashboard" element={<EducatorDashboard />} />
+              <Route path="create-course" element={<EducatorAddCourse />} />
+              <Route path="all-courses" element={<EducatorAllCourse />} />
+              <Route path="edit-course/:id" element={<EducatorEditAndDeleteCourse />} />
+              <Route path="analytics" element={<EducatorAnalytics />} />
+              <Route path="students" element={<EducatorStudents />} />
+            </Route>
           </Routes>
         </div>
         

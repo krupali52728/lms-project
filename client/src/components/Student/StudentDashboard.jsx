@@ -46,72 +46,7 @@ const StudentDashboard = () => {
       difficulty: 'Intermediate',
       nextLesson: 'React Hooks - Advanced Patterns'
     },
-    {
-      id: 2,
-      title: 'Advanced JavaScript Concepts',
-      instructor: 'Sarah Johnson',
-      thumbnail: '/api/placeholder/300/200',
-      progress: 45,
-      totalLessons: 32,
-      completedLessons: 14,
-      duration: '8h 45m',
-      rating: 4.9,
-      lastAccessed: '1 day ago',
-      category: 'Programming',
-      difficulty: 'Advanced',
-      nextLesson: 'Closures and Scope'
-    },
-    {
-      id: 3,
-      title: 'UI/UX Design Fundamentals',
-      instructor: 'Mike Chen',
-      thumbnail: '/api/placeholder/300/200',
-      progress: 90,
-      totalLessons: 28,
-      completedLessons: 25,
-      duration: '6h 15m',
-      rating: 4.7,
-      lastAccessed: '3 hours ago',
-      category: 'Design',
-      difficulty: 'Beginner',
-      nextLesson: 'Design System Creation'
-    },
-    {
-      id: 4,
-      title: 'Python for Data Science',
-      instructor: 'Dr. Lisa Wang',
-      thumbnail: '/api/placeholder/300/200',
-      progress: 20,
-      totalLessons: 52,
-      completedLessons: 10,
-      duration: '15h 20m',
-      rating: 4.6,
-      lastAccessed: '5 days ago',
-      category: 'Data Science',
-      difficulty: 'Intermediate',
-      nextLesson: 'Pandas DataFrames'
-    }
-  ];
-
-  const upcomingDeadlines = [
-    {
-      course: 'Complete React Developer Course',
-      assignment: 'Build a Todo App',
-      dueDate: '2024-01-25',
-      timeLeft: '3 days'
-    },
-    {
-      course: 'UI/UX Design Fundamentals',
-      assignment: 'Design Portfolio Review',
-      dueDate: '2024-01-28',
-      timeLeft: '6 days'
-    },
-    {
-      course: 'Advanced JavaScript Concepts',
-      assignment: 'Final Project',
-      dueDate: '2024-02-01',
-      timeLeft: '10 days'
-    }
+    
   ];
 
   const fadeInUp = {
@@ -418,18 +353,7 @@ const StudentDashboard = () => {
                 <h3 className="text-xl font-semibold text-white">Upcoming Deadlines</h3>
               </div>
               
-              <div className="space-y-4">
-                {upcomingDeadlines.map((deadline, index) => (
-                  <div key={index} className="border-l-4 border-orange-400 pl-4 py-2">
-                    <h4 className="text-white font-medium text-sm">{deadline.assignment}</h4>
-                    <p className="text-slate-400 text-xs mb-1">{deadline.course}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-orange-400 text-xs">{deadline.timeLeft} left</span>
-                      <span className="text-slate-500 text-xs">{deadline.dueDate}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              
             </motion.div>
 
             {/* Study Streak */}
