@@ -23,8 +23,9 @@ export const AuthProvider = ({ children }) => {
       setIsLoggedIn(true);
       // Fetch user profile data
       fetchUserProfile();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const fetchUserProfile = async () => {
@@ -38,6 +39,8 @@ export const AuthProvider = ({ children }) => {
       // If token is invalid, clear it
       localStorage.removeItem('token');
       setIsLoggedIn(false);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -180,7 +180,7 @@ const Navbar = () => {
                         {/* Navigation Links */}
                         <div className="p-2">
                           {user?.role === 'educator' ? (
-                            // Educator Navigation
+                            // Educator Navigation - can access both dashboards
                             <>
                               <Link
                                 to="/educator/dashboard"
@@ -195,19 +195,19 @@ const Navbar = () => {
                               </Link>
                               
                               <Link
-                                to="/educator/courses"
+                                to="/student/dashboard"
                                 onClick={() => setShowProfileDropdown(false)}
-                                className="flex items-center space-x-3 p-4 text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                                className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
                               >
                                 <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
                                 <div>
-                                  <span className="font-medium">My Courses</span>
-                                  <p className="text-xs text-slate-500">Create & edit courses</p>
+                                  <span className="font-medium">Student Dashboard</span>
+                                  <p className="text-xs text-slate-500">View enrolled courses</p>
                                 </div>
                               </Link>
                             </>
                           ) : (
-                            // Student Navigation
+                            // Student Navigation - only student dashboard
                             <Link
                               to="/student/dashboard"
                               onClick={() => setShowProfileDropdown(false)}
@@ -222,7 +222,7 @@ const Navbar = () => {
                           )}
                           
                           <Link
-                            to={user?.role === 'educator' ? "/educator/account" : "/student/account"}
+                            to={user?.role === 'educator'  ? "/student/account" : "/student/account"}
                             onClick={() => setShowProfileDropdown(false)}
                             className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
                           >
@@ -332,7 +332,7 @@ const Navbar = () => {
                     {/* Navigation Links */}
                     <div className="space-y-2">
                       {user?.role === 'educator' ? (
-                        // Educator Mobile Navigation
+                        // Educator Mobile Navigation - can access both dashboards
                         <>
                           <Link
                             to="/educator/dashboard"
@@ -344,16 +344,16 @@ const Navbar = () => {
                           </Link>
                           
                           <Link
-                            to="/educator/courses"
+                            to="/student/dashboard"
                             onClick={() => setIsMenuOpen(false)}
-                            className="flex items-center space-x-3 p-4 text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
+                            className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
                           >
                             <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                            <span className="font-medium">My Courses</span>
+                            <span className="font-medium">Student Dashboard</span>
                           </Link>
                         </>
                       ) : (
-                        // Student Mobile Navigation
+                        // Student Mobile Navigation - only student dashboard
                         <Link
                           to="/student/dashboard"
                           onClick={() => setIsMenuOpen(false)}

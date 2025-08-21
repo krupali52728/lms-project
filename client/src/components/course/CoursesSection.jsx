@@ -51,6 +51,59 @@ const CoursesSection = () => {
       category: 'Design',
       difficulty: 'Beginner'
     },
+    {
+      id: 3,
+      title: 'UI/UX Design Fundamentals',
+      description: 'Learn the fundamentals of user interface and user experience design with modern tools and techniques.',
+      instructor: 'Mike Chen',
+      thumbnail: null,
+      price: 69.99,
+      rating: 4.7,
+      students: 1543,
+      duration: '6h 15m',
+      lessons: 28,
+      category: 'Design',
+      difficulty: 'Beginner'
+    },{
+      id: 3,
+      title: 'UI/UX Design Fundamentals',
+      description: 'Learn the fundamentals of user interface and user experience design with modern tools and techniques.',
+      instructor: 'Mike Chen',
+      thumbnail: null,
+      price: 69.99,
+      rating: 4.7,
+      students: 1543,
+      duration: '6h 15m',
+      lessons: 28,
+      category: 'Design',
+      difficulty: 'Beginner'
+    },{
+      id: 3,
+      title: 'UI/UX Design Fundamentals',
+      description: 'Learn the fundamentals of user interface and user experience design with modern tools and techniques.',
+      instructor: 'Mike Chen',
+      thumbnail: null,
+      price: 69.99,
+      rating: 4.7,
+      students: 1543,
+      duration: '6h 15m',
+      lessons: 28,
+      category: 'Design',
+      difficulty: 'Beginner'
+    },{
+      id: 3,
+      title: 'UI/UX Design Fundamentals',
+      description: 'Learn the fundamentals of user interface and user experience design with modern tools and techniques.',
+      instructor: 'Mike Chen',
+      thumbnail: null,
+      price: 69.99,
+      rating: 4.7,
+      students: 1543,
+      duration: '6h 15m',
+      lessons: 28,
+      category: 'Design',
+      difficulty: 'Beginner'
+    },
     
   ];
 

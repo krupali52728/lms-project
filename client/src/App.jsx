@@ -20,6 +20,7 @@ import EducatorAllCourse from './components/Educator/EducatorAllCourse.jsx';
 import EducatorEditAndDeleteCourse from './components/Educator/EducatorEditAndDeleteCourse.jsx';
 import EducatorAnalytics from './components/Educator/EducatorAnalytics.jsx';
 import EducatorStudents from './components/Educator/EducatorStudents.jsx';
+import NotFound from './pages/NotFound.jsx';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/search" element={<Search />} />
             <Route path="/course/:id" element={<CourseDetails />} />
+            <Route path="*" element={<NotFound />} />
             
             {/* Student Routes - Protected by StudentLayout */}
             <Route path="/student" element={<StudentLayout />}>
