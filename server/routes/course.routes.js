@@ -5,6 +5,7 @@ import {
   getAllCourses,
   deleteCourse,
   getCourseEducator,
+  getCourseById,
   togglePublishCourse,
   enrollInCourse
 } from '../controllers/course.controllers.js';
@@ -16,9 +17,12 @@ courseRouter.get('/all', getAllCourses);
 
 // Protected routes (authentication required)
 courseRouter.post('/create', authenticate, authorize('educator'), createCourse); 
-courseRouter.delete('/:courseId', authenticate, authorize('educator'), deleteCourse); 
 courseRouter.get('/my-courses', authenticate, authorize('educator'), getCourseEducator); 
+courseRouter.delete('/:courseId', authenticate, authorize('educator'), deleteCourse); 
 courseRouter.post('/enroll/:courseId', authenticate,  enrollInCourse);
 courseRouter.patch('/:courseId/toggle-publish', authenticate, authorize('educator'), togglePublishCourse); 
+
+// This route should come last because it uses a parameter
+courseRouter.get('/:courseId', getCourseById); 
 
 export default courseRouter;

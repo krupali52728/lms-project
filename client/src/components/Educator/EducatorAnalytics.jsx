@@ -93,7 +93,7 @@ const EducatorAnalytics = () => {
         Start creating and publishing courses to see detailed analytics about your performance and revenue.
       </p>
       <Link
-        to="/educator/create-course"
+        to="/educator/add-course"
         className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
       >
         <BookOpen className="w-5 h-5" />
@@ -374,7 +374,7 @@ const EducatorAnalytics = () => {
                 </Link>
                 
                 <Link
-                  to="/educator/create-course"
+                  to="/educator/add-course"
                   className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-green-500/50 hover:bg-green-500/5 transition-all duration-300 group"
                 >
                   <BookOpen className="w-5 h-5 text-green-400" />

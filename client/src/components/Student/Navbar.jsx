@@ -365,7 +365,7 @@ const Navbar = () => {
                       )}
                       
                       <Link
-                        to={user?.role === 'educator' ? "/educator/account" : "/student/account"}
+                        to="/student/account"
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center space-x-3 p-4 text-slate-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
                       >

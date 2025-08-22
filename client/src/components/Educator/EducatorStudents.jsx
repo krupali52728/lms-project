@@ -72,7 +72,7 @@ const EducatorStudents = () => {
         Once students start enrolling in your courses, you'll be able to track their progress and interact with them here.
       </p>
       <Link
-        to="/educator/create-course"
+        to="/educator/add-course"
         className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
       >
         <BookOpen className="w-5 h-5" />

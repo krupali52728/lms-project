@@ -12,3 +12,16 @@ export const uploadVideo = async (videoFile) => {
   });
   return res.data;
 };
+
+// Image upload API function
+export const uploadImage = async (imageFile) => {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  
+  const res = await api.post("/video/upload-image", formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};

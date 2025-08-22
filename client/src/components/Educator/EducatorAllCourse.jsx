@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -17,19 +17,133 @@ import {
   TrendingUp,
   Settings,
   Copy,
-  Archive
+  Archive,
+  AlertCircle,
+  Loader
 } from 'lucide-react';
+
+// Import API functions
+import { getEducatorCourses, deleteCourse, toggleCourse } from '../../Api/courseApi.js';
 
 const EducatorAllCourse = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Courses data from backend
+  const [courses, setCourses] = useState([]);
 
-  // Placeholder courses data - replace with your backend data
-  const [courses, setCourses] = useState([
-    // Empty array for now - you'll populate this with your backend API
-  ]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await getEducatorCourses();
+      
+      if (response.success && response.courses) {
+        const educatorCourses = response.courses;
+       
+        
+        // Transform the data to match our component's expected format
+        const transformedCourses = educatorCourses.map(course => ({
+          id: course._id,
+          title: course.title,
+          description: course.description,
+          price: course.price,
+          discount: course.discount || 0,
+          thumbnail: course.thumbnail,
+          status: course.isPublished ? 'published' : 'draft',
+          rating: calculateAverageRating(course.ratings),
+          students: course.enrolledStudents?.length || 0,
+          lessons: course.lectures?.length || 0,
+          duration: formatDuration(course.totalDuration),
+          createdAt: course.createdAt,
+          updatedAt: course.updatedAt
+        }));
+        
+        setCourses(transformedCourses);
+      } else {
+        throw new Error(response.message || 'Failed to fetch courses');
+      }
+    } catch (err) {
+      console.error('Error fetching courses:', err);
+      setError(err.message || 'Failed to load courses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to calculate average rating
+  const calculateAverageRating = (ratings) => {
+    if (!ratings || ratings.length === 0) return 0;
+    const total = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+    return (total / ratings.length).toFixed(1);
+  };
+
+  // Helper function to format duration
+  const formatDuration = (minutes) => {
+    if (!minutes) return '0h';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours === 0) return `${mins}m`;
+    return mins === 0 ? `${hours}h` : `${hours}h ${mins}m`;
+  };
+
+  // Handle course deletion
+  const handleDeleteCourse = async (courseId, courseTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${courseTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      console.log('Deleting course:', courseId);
+      const response = await deleteCourse(courseId);
+      console.log('Delete course response:', response);
+      
+      if (response.success) {
+        // Remove the course from the local state
+        setCourses(courses.filter(course => course.id !== courseId));
+        console.log('Course deleted successfully');
+      } else {
+        throw new Error(response.message || 'Failed to delete course');
+      }
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      setError(err.message || 'Failed to delete course');
+    }
+  };
+
+  // Handle course toggle (publish/unpublish)
+  const handleToggleCourse = async (courseId, currentStatus) => {
+    try {
+      console.log('Toggling course status:', courseId, currentStatus);
+      const response = await toggleCourse(courseId);
+      console.log('Toggle course response:', response);
+      
+      if (response.success) {
+        // Update the course status in local state
+        setCourses(courses.map(course => 
+          course.id === courseId 
+            ? { ...course, status: currentStatus === 'published' ? 'draft' : 'published' }
+            : course
+        ));
+        console.log('Course status toggled successfully');
+      } else {
+        throw new Error(response.message || 'Failed to toggle course status');
+      }
+    } catch (err) {
+      console.error('Error toggling course status:', err);
+      setError(err.message || 'Failed to toggle course status');
+    }
+  };
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -39,9 +153,27 @@ const EducatorAllCourse = () => {
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.category.toLowerCase().includes(searchTerm.toLowerCase());
+                         course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || course.status === filterStatus;
     return matchesSearch && matchesStatus;
+  });
+
+  // Sort courses
+  const sortedCourses = [...filteredCourses].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      case 'oldest':
+        return new Date(a.createdAt) - new Date(b.createdAt);
+      case 'students':
+        return b.students - a.students;
+      case 'revenue':
+        return (b.students * b.price) - (a.students * a.price);
+      case 'rating':
+        return b.rating - a.rating;
+      default:
+        return 0;
+    }
   });
 
   const EmptyState = () => (
@@ -57,7 +189,7 @@ const EducatorAllCourse = () => {
         Start sharing your knowledge by creating your first course. Students are waiting to learn from you!
       </p>
       <Link
-        to="/educator/create-course"
+        to="/educator/add-course"
         className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
       >
         <BookOpen className="w-5 h-5" />
@@ -70,27 +202,41 @@ const EducatorAllCourse = () => {
     <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden hover:border-slate-600/50 transition-all duration-300 group">
       {/* Course Thumbnail */}
       <div className="relative h-48 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="absolute inset-0 bg-black/20" />
+        {course.thumbnail ? (
+          <img 
+            src={course.thumbnail} 
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-black/20" />
+        )}
         <div className="absolute top-4 left-4">
-          <span className={`px-3 py-1 backdrop-blur-sm rounded-full text-white text-sm ${
-            course.status === 'published' 
-              ? 'bg-green-500/20 border border-green-500/30' 
-              : course.status === 'draft'
-              ? 'bg-yellow-500/20 border border-yellow-500/30'
-              : 'bg-red-500/20 border border-red-500/30'
-          }`}>
+          <button
+            onClick={() => handleToggleCourse(course.id, course.status)}
+            className={`px-3 py-1 backdrop-blur-sm rounded-full text-white text-sm transition-all duration-200 hover:scale-105 ${
+              course.status === 'published' 
+                ? 'bg-green-500/20 border border-green-500/30 hover:bg-green-500/30' 
+                : course.status === 'draft'
+                ? 'bg-yellow-500/20 border border-yellow-500/30 hover:bg-yellow-500/30'
+                : 'bg-red-500/20 border border-red-500/30 hover:bg-red-500/30'
+            }`}
+          >
             {course.status}
-          </span>
+          </button>
         </div>
         <div className="absolute top-4 right-4">
           <div className="flex items-center space-x-1 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
             <Star className="w-3 h-3 fill-current text-yellow-400" />
-            <span>{course.rating}</span>
+            <span>{course.rating || 0}</span>
           </div>
         </div>
         <div className="absolute bottom-4 right-4">
-          <button className="p-2 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-colors">
-            <MoreVertical className="w-4 h-4" />
+          <button 
+            onClick={() => handleDeleteCourse(course.id, course.title)}
+            className="p-2 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-red-600/70 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -128,7 +274,7 @@ const EducatorAllCourse = () => {
         </div>
 
         {/* Revenue Info */}
-        {course.status === 'published' && (
+        {course.status === 'published' && course.students > 0 && (
           <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
             <div className="flex items-center justify-between">
               <span className="text-green-400 text-sm">Total Revenue</span>
@@ -161,6 +307,24 @@ const EducatorAllCourse = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-24">
       <div className="container mx-auto px-6 lg:px-8 pb-16">
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center space-x-3"
+          >
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            <p className="text-red-400">{error}</p>
+            <button 
+              onClick={() => setError('')}
+              className="ml-auto text-red-400 hover:text-red-300"
+            >
+              ×
+            </button>
+          </motion.div>
+        )}
+
         {/* Header */}
         <motion.div
           variants={fadeInUp}
@@ -186,7 +350,7 @@ const EducatorAllCourse = () => {
           </div>
 
           <Link
-            to="/educator/create-course"
+            to="/educator/add-course"
             className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2"
           >
             <BookOpen className="w-5 h-5" />
@@ -194,56 +358,66 @@ const EducatorAllCourse = () => {
           </Link>
         </motion.div>
 
-        {/* Stats Cards */}
-        <motion.div
-          variants={fadeInUp}
-          initial="initial"
-          animate="animate"
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        >
-          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-white">{courses.length}</h3>
-                <p className="text-slate-400 text-sm">Total Courses</p>
-              </div>
-              <BookOpen className="w-8 h-8 text-blue-400" />
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <Loader className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
+              <p className="text-slate-400">Loading your courses...</p>
             </div>
           </div>
+        ) : (
+          <>
+            {/* Stats Cards */}
+            <motion.div
+              variants={fadeInUp}
+              initial="initial"
+              animate="animate"
+              transition={{ delay: 0.2 }}
+              className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+            >
+              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{courses.length}</h3>
+                    <p className="text-slate-400 text-sm">Total Courses</p>
+                  </div>
+                  <BookOpen className="w-8 h-8 text-blue-400" />
+                </div>
+              </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.status === 'published').length}</h3>
-                <p className="text-slate-400 text-sm">Published</p>
+              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.status === 'published').length}</h3>
+                    <p className="text-slate-400 text-sm">Published</p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-green-400" />
+                </div>
               </div>
-              <TrendingUp className="w-8 h-8 text-green-400" />
-            </div>
-          </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.status === 'draft').length}</h3>
-                <p className="text-slate-400 text-sm">Drafts</p>
+              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.status === 'draft').length}</h3>
+                    <p className="text-slate-400 text-sm">Drafts</p>
+                  </div>
+                  <Settings className="w-8 h-8 text-yellow-400" />
+                </div>
               </div>
-              <Settings className="w-8 h-8 text-yellow-400" />
-            </div>
-          </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-white">
-                  {courses.reduce((sum, course) => sum + (course.students || 0), 0)}
-                </h3>
-                <p className="text-slate-400 text-sm">Total Students</p>
+              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">
+                      {courses.reduce((sum, course) => sum + (course.students || 0), 0)}
+                    </h3>
+                    <p className="text-slate-400 text-sm">Total Students</p>
+                  </div>
+                  <Users className="w-8 h-8 text-purple-400" />
+                </div>
               </div>
-              <Users className="w-8 h-8 text-purple-400" />
-            </div>
-          </div>
-        </motion.div>
+            </motion.div>
 
         {/* Filters and Search */}
         <motion.div
@@ -295,77 +469,79 @@ const EducatorAllCourse = () => {
 
             <div className="flex items-center space-x-2">
               <span className="text-slate-400 text-sm">
-                {filteredCourses.length} course{filteredCourses.length !== 1 ? 's' : ''}
+                {sortedCourses.length} course{sortedCourses.length !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
         </motion.div>
 
-        {/* Courses Grid */}
-        <motion.div
-          variants={fadeInUp}
-          initial="initial"
-          animate="animate"
-          transition={{ delay: 0.4 }}
-        >
-          {courses.length === 0 ? (
-            <EmptyState />
-          ) : filteredCourses.length === 0 ? (
-            <div className="text-center py-16">
-              <Search className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">No courses found</h3>
-              <p className="text-slate-400">Try adjusting your search or filters</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
-          )}
-        </motion.div>
+            {/* Courses Grid */}
+            <motion.div
+              variants={fadeInUp}
+              initial="initial"
+              animate="animate"
+              transition={{ delay: 0.4 }}
+            >
+              {courses.length === 0 ? (
+                <EmptyState />
+              ) : sortedCourses.length === 0 ? (
+                <div className="text-center py-16">
+                  <Search className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">No courses found</h3>
+                  <p className="text-slate-400">Try adjusting your search or filters</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedCourses.map((course) => (
+                    <CourseCard key={course.id} course={course} />
+                  ))}
+                </div>
+              )}
+            </motion.div>
 
-        {/* Bulk Actions - Show when courses exist */}
-        {courses.length > 0 && (
-          <motion.div
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.6 }}
-            className="mt-12"
-          >
-            <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
-              
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Link
-                  to="/educator/create-course"
-                  className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300 group"
-                >
-                  <BookOpen className="w-5 h-5 text-blue-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">New Course</span>
-                </Link>
-                
-                <button className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-green-500/50 hover:bg-green-500/5 transition-all duration-300 group">
-                  <Copy className="w-5 h-5 text-green-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">Duplicate Course</span>
-                </button>
-                
-                <button className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-yellow-500/50 hover:bg-yellow-500/5 transition-all duration-300 group">
-                  <Archive className="w-5 h-5 text-yellow-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">Archive Courses</span>
-                </button>
-                
-                <Link
-                  to="/educator/analytics"
-                  className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all duration-300 group"
-                >
-                  <TrendingUp className="w-5 h-5 text-purple-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">View Analytics</span>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
+            {/* Bulk Actions - Show when courses exist */}
+            {courses.length > 0 && (
+              <motion.div
+                variants={fadeInUp}
+                initial="initial"
+                animate="animate"
+                transition={{ delay: 0.6 }}
+                className="mt-12"
+              >
+                <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
+                  
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Link
+                      to="/educator/add-course"
+                      className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300 group"
+                    >
+                      <BookOpen className="w-5 h-5 text-blue-400" />
+                      <span className="text-slate-300 group-hover:text-white transition-colors">New Course</span>
+                    </Link>
+                    
+                    <button className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-green-500/50 hover:bg-green-500/5 transition-all duration-300 group">
+                      <Copy className="w-5 h-5 text-green-400" />
+                      <span className="text-slate-300 group-hover:text-white transition-colors">Duplicate Course</span>
+                    </button>
+                    
+                    <button className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-yellow-500/50 hover:bg-yellow-500/5 transition-all duration-300 group">
+                      <Archive className="w-5 h-5 text-yellow-400" />
+                      <span className="text-slate-300 group-hover:text-white transition-colors">Archive Courses</span>
+                    </button>
+                    
+                    <Link
+                      to="/educator/analytics"
+                      className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all duration-300 group"
+                    >
+                      <TrendingUp className="w-5 h-5 text-purple-400" />
+                      <span className="text-slate-300 group-hover:text-white transition-colors">View Analytics</span>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
     </div>

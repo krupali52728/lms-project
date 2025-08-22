@@ -17,7 +17,7 @@ lectureRouter.get('/course/:courseId', getLecturesByCourse);
 lectureRouter.get('/:lectureId', getLectureById); 
 
 // Protected routes (educators only)
-lectureRouter.post('/create/:courseId/:chapterId', authenticate, authorize('educator'), createLecture); 
+lectureRouter.post('/:courseId/:chapterId', authenticate, authorize('educator'), createLecture); 
 lectureRouter.delete('/:lectureId', authenticate, authorize('educator'), deleteLecture); 
 lectureRouter.put('/reorder/:chapterId', authenticate, authorize('educator'), reorderLectures); 
 

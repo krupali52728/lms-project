@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -12,14 +12,60 @@ import {
   ArrowRight,
   Target,
   Clock,
-  Star
+  Star,
+  AlertCircle
 } from 'lucide-react';
+import { getAllCourses } from '../../Api/courseApi.js';
 
 const EducatorDashboard = () => {
+  const [courses, setCourses] = useState([]);
+  const [stats, setStats] = useState({
+    totalCourses: 0,
+    totalStudents: 0,
+    totalRevenue: 0,
+    avgRating: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6 }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllCourses();
+      if (response.success) {
+        const userCourses = response.courses; // In real app, filter by current user
+        setCourses(userCourses);
+        
+        // Calculate stats
+        const totalStudents = userCourses.reduce((total, course) => 
+          total + (course.enrolledStudents?.length || 0), 0
+        );
+        const totalRevenue = userCourses.reduce((total, course) => 
+          total + (course.price * (course.enrolledStudents?.length || 0)), 0
+        );
+        
+        setStats({
+          totalCourses: userCourses.length,
+          totalStudents,
+          totalRevenue,
+          avgRating: 4.8 // Placeholder - calculate from actual ratings
+        });
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch dashboard data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Navigation cards for different sections
@@ -28,7 +74,7 @@ const EducatorDashboard = () => {
       title: 'Create Course',
       description: 'Create and publish new courses for students',
       icon: Plus,
-      path: '/educator/create-course',
+      path: '/educator/add-course',
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-500/10',
       borderColor: 'border-blue-500/20'
@@ -62,12 +108,12 @@ const EducatorDashboard = () => {
     }
   ];
 
-  // Quick stats (placeholder - you'll replace with real data from your backend)
+  // Quick stats with real data
   const quickStats = [
-    { label: 'Total Courses', value: '0', icon: BookOpen, color: 'blue' },
-    { label: 'Total Students', value: '0', icon: Users, color: 'green' },
-    { label: 'Total Revenue', value: '$0', icon: DollarSign, color: 'purple' },
-    { label: 'Avg Rating', value: '0.0', icon: Star, color: 'yellow' }
+    { label: 'Total Courses', value: stats.totalCourses.toString(), icon: BookOpen, color: 'blue' },
+    { label: 'Total Students', value: stats.totalStudents.toString(), icon: Users, color: 'green' },
+    { label: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: DollarSign, color: 'purple' },
+    { label: 'Avg Rating', value: stats.avgRating.toFixed(1), icon: Star, color: 'yellow' }
   ];
 
   return (
@@ -88,39 +134,129 @@ const EducatorDashboard = () => {
           </p>
         </motion.div>
 
-        {/* Quick Stats */}
-        <motion.div
-          variants={fadeInUp}
-          initial="initial"
-          animate="animate"
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
-        >
-          {quickStats.map((stat, index) => {
-            const IconComponent = stat.icon;
-            const colorClasses = {
-              blue: 'from-blue-500 to-blue-600',
-              green: 'from-green-500 to-emerald-600',
-              purple: 'from-purple-500 to-purple-600',
-              yellow: 'from-yellow-500 to-orange-600'
-            };
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center space-x-3"
+          >
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            <p className="text-red-400">{error}</p>
+          </motion.div>
+        )}
 
-            return (
-              <div
-                key={stat.label}
-                className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 hover:border-slate-600/50 transition-all duration-300"
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-slate-300">Loading dashboard...</p>
+          </div>
+        ) : (
+          <>
+            {/* Quick Stats */}
+            <motion.div
+              variants={fadeInUp}
+              initial="initial"
+              animate="animate"
+              transition={{ delay: 0.2 }}
+              className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+            >
+              {quickStats.map((stat, index) => {
+                const IconComponent = stat.icon;
+                const colorClasses = {
+                  blue: 'from-blue-500 to-blue-600',
+                  green: 'from-green-500 to-emerald-600',
+                  purple: 'from-purple-500 to-purple-600',
+                  yellow: 'from-yellow-500 to-orange-600'
+                };
+
+                return (
+                  <div
+                    key={stat.label}
+                    className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 hover:border-slate-600/50 transition-all duration-300"
+                  >
+                    <div className={`w-12 h-12 bg-gradient-to-r ${colorClasses[stat.color]} rounded-xl flex items-center justify-center mb-4`}>
+                      <IconComponent className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white mb-1">{stat.value}</h3>
+                      <p className="text-slate-400 text-sm">{stat.label}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </motion.div>
+
+            {/* Recent Courses Preview */}
+            {courses.length > 0 && (
+              <motion.div
+                variants={fadeInUp}
+                initial="initial"
+                animate="animate"
+                transition={{ delay: 0.3 }}
+                className="mb-12"
               >
-                <div className={`w-12 h-12 bg-gradient-to-r ${colorClasses[stat.color]} rounded-xl flex items-center justify-center mb-4`}>
-                  <IconComponent className="w-6 h-6 text-white" />
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white">Recent Courses</h2>
+                  <Link
+                    to="/educator/all-courses"
+                    className="text-blue-400 hover:text-blue-300 transition-colors flex items-center space-x-1"
+                  >
+                    <span>View All</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-1">{stat.value}</h3>
-                  <p className="text-slate-400 text-sm">{stat.label}</p>
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {courses.slice(0, 3).map((course) => (
+                    <div key={course._id} className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden">
+                      <div className="h-32 bg-gradient-to-br from-blue-600 to-purple-600 relative">
+                        {course.thumbnail ? (
+                          <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <BookOpen className="w-8 h-8 text-white/50" />
+                          </div>
+                        )}
+                        <div className="absolute top-2 right-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            course.isPublished 
+                              ? 'bg-green-500/20 text-green-400' 
+                              : 'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {course.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4">
+                        <h3 className="font-semibold text-white mb-2 line-clamp-1">{course.title}</h3>
+                        <div className="flex items-center justify-between text-sm text-slate-400">
+                          <div className="flex items-center space-x-3">
+                            <span className="flex items-center space-x-1">
+                              <Users className="w-3 h-3" />
+                              <span>{course.enrolledStudents?.length || 0}</span>
+                            </span>
+                            <span className="flex items-center space-x-1">
+                              <Clock className="w-3 h-3" />
+                              <span>{course.totalDuration}h</span>
+                            </span>
+                          </div>
+                          <Link
+                            to={`/educator/course/${course._id}/manage`}
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            Manage
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            );
-          })}
-        </motion.div>
+              </motion.div>
+            )}
+          </>
+        )}
 
         {/* Dashboard Sections */}
         <motion.div
@@ -171,7 +307,7 @@ const EducatorDashboard = () => {
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
-              to="/educator/create-course"
+              to="/educator/add-course"
               className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300 group"
             >
               <Plus className="w-5 h-5 text-blue-400" />
@@ -219,7 +355,7 @@ const EducatorDashboard = () => {
               Share your expertise with students worldwide. Create engaging courses and build your teaching career.
             </p>
             <Link
-              to="/educator/create-course"
+              to="/educator/add-course"
               className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
             >
               <Plus className="w-5 h-5" />

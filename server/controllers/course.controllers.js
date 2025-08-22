@@ -2,7 +2,7 @@ import Course from "../model/course.model.js";
 import Chapter from "../model/chapter.model.js";
 import Lecture from "../model/lecture.model.js";
 import User from "../model/user.model.js";
-import express from "express";
+
 
 //create course
 export const createCourse = async (req, res) => {
@@ -154,6 +154,26 @@ export const getCourseEducator = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, courses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get single course by ID
+export const getCourseById = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    const course = await Course.findById(courseId)
+      .populate("educator", "name email avatar")
+      .populate("chapters")
+      .populate("lectures");
+
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    res.status(200).json({ success: true, course });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

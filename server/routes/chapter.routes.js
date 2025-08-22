@@ -14,7 +14,7 @@ chapterRouter.get('/course/:courseId', getChaptersByCourse);
 chapterRouter.get('/:chapterId', getChapterById); 
 
 // Protected routes (educators only)
-chapterRouter.post('/create/:courseId', authenticate, authorize('educator'), createChapter); 
+chapterRouter.post('/:courseId', authenticate, authorize('educator'), createChapter); 
 chapterRouter.delete('/:chapterId', authenticate, authorize('educator'), deleteChapter); 
 
 export default chapterRouter;

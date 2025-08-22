@@ -9,11 +9,11 @@ const upload = multer({
     fileSize: 1024 * 1024 * 1024, // 1GB limit for videos
   },
   fileFilter: (req, file, cb) => {
-    // Accept video files only
-    if (file.mimetype.startsWith('video/')) {
+    // Accept video and image files
+    if (file.mimetype.startsWith('video/') || file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only video files are allowed!'), false);
+      cb(new Error('Only video and image files are allowed!'), false);
     }
   }
 });
@@ -29,6 +29,32 @@ export const uploadVideoToCloudinary = async (fileBuffer, fileName) => {
           public_id: fileName,
           quality: 'auto',
           format: 'mp4'
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      ).end(fileBuffer);
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Function to upload image to Cloudinary
+export const uploadImageToCloudinary = async (fileBuffer, fileName) => {
+  try {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'lms-thumbnails',
+          public_id: fileName,
+          quality: 'auto',
+          format: 'jpg'
         },
         (error, result) => {
           if (error) {

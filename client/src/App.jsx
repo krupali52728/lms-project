@@ -12,15 +12,14 @@ import StudentDashboard from './components/Student/StudentDashboard.jsx';
 import EducatorDashboard from './components/Educator/EducatorDashboard.jsx';
 import EducatorLayout from './components/layouts/EducatorLayout.jsx';
 import StudentLayout from './components/layouts/StudentLayout.jsx';
-
-
-import './index.css';
 import EducatorAddCourse from './components/Educator/EducatorAddCourse.jsx';
 import EducatorAllCourse from './components/Educator/EducatorAllCourse.jsx';
 import EducatorEditAndDeleteCourse from './components/Educator/EducatorEditAndDeleteCourse.jsx';
 import EducatorAnalytics from './components/Educator/EducatorAnalytics.jsx';
 import EducatorStudents from './components/Educator/EducatorStudents.jsx';
 import NotFound from './pages/NotFound.jsx';
+
+import './index.css';
 
 function App() {
   return (
@@ -46,9 +45,10 @@ function App() {
             <Route path="/educator" element={<EducatorLayout />}>
               <Route index element={<EducatorDashboard />} />
               <Route path="dashboard" element={<EducatorDashboard />} />
-              <Route path="create-course" element={<EducatorAddCourse />} />
+              <Route path="add-course" element={<EducatorAddCourse />} />
               <Route path="all-courses" element={<EducatorAllCourse />} />
               <Route path="edit-course/:id" element={<EducatorEditAndDeleteCourse />} />
+              <Route path="course/:id/manage" element={<EducatorEditAndDeleteCourse />} />
               <Route path="analytics" element={<EducatorAnalytics />} />
               <Route path="students" element={<EducatorStudents />} />
             </Route>
