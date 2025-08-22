@@ -7,7 +7,7 @@ const CourseCard = ({ course }) => {
   const navigate = useNavigate();
 
   const handleCourseClick = () => {
-    navigate(`/course/${course.id}`);
+    navigate(`/course/${course._id}`);
   };
 
   return (
@@ -35,7 +35,7 @@ const CourseCard = ({ course }) => {
         {/* Course Badge */}
         <div className="absolute top-2 left-2">
           <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs font-medium">
-            {course.category}
+            {course.category || 'General'}
           </span>
         </div>
 
@@ -43,14 +43,14 @@ const CourseCard = ({ course }) => {
         <div className="absolute top-2 right-2">
           <div className="flex items-center space-x-1 px-2 py-0.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-xs">
             <Star className="w-3 h-3 fill-current text-yellow-400" />
-            <span>{course.rating}</span>
+            <span>{course.rating || '4.0'}</span>
           </div>
         </div>
 
         {/* Price */}
         <div className="absolute bottom-2 right-2">
           <div className="px-2 py-0.5 bg-green-500/20 backdrop-blur-sm border border-green-500/30 rounded-full text-green-400 text-xs font-semibold">
-            ${course.price}
+            ₹{course.price || '0'}
           </div>
         </div>
       </div>
@@ -66,22 +66,22 @@ const CourseCard = ({ course }) => {
         </p>
 
         <div className="flex items-center text-slate-300 text-xs mb-2">
-          <span className="font-medium">by {course.instructor}</span>
+          <span className="font-medium">by {course.educator?.name || course.instructor || 'Unknown'}</span>
         </div>
 
         {/* Course Stats */}
         <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
           <div className="flex items-center space-x-1">
             <Clock className="w-3.5 h-3.5" />
-            <span>{course.duration}</span>
+            <span>{course.duration || 'N/A'}</span>
           </div>
           <div className="flex items-center space-x-1">
             <BookOpen className="w-3.5 h-3.5" />
-            <span>{course.lessons} lessons</span>
+            <span>{course.chapters?.length || 0} chapters</span>
           </div>
           <div className="flex items-center space-x-1">
             <Users className="w-3.5 h-3.5" />
-            <span>{course.students}</span>
+            <span>{course.enrolledStudents?.length || 0}</span>
           </div>
         </div>
 
@@ -89,14 +89,14 @@ const CourseCard = ({ course }) => {
         <div className="flex items-center justify-between">
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-              course.difficulty === 'Beginner' 
+              (course.level || course.difficulty) === 'Beginner' 
                 ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                : course.difficulty === 'Intermediate'
+                : (course.level || course.difficulty) === 'Intermediate'
                 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                 : 'bg-red-500/20 text-red-400 border border-red-500/30'
             }`}
           >
-            {course.difficulty}
+            {course.level || course.difficulty || 'Beginner'}
           </span>
           
           <button 

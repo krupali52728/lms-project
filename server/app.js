@@ -9,6 +9,7 @@ import courseRouter from './routes/course.routes.js';
 import chapterRouter from './routes/chapter.routes.js';
 import lectureRouter from './routes/lecture.routes.js';
 import videoRouter from './routes/video.routes.js';
+import paymentRouter from './routes/payment.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,6 +45,8 @@ app.use('/api/course',courseRouter);
 app.use('/api/chapter', chapterRouter);
 
 app.use('/api/lecture', lectureRouter);
+
+app.use('/api/payment',paymentRouter);
 
 app.listen(PORT,()=>{
     console.log("Server Started on port", PORT);
