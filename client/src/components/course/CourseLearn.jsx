@@ -23,25 +23,124 @@ import {
   Star
 } from 'lucide-react';
 import { getCourseById } from '../../Api/courseApi';
+import { checkCoursePurchase } from '../../Api/userApi';
+import { getLectureWithAccess } from '../../Api/lectureApi';
+import { useAuth } from '../../context/AuthContext';
 
 const CourseLearn = () => {
   const { id: courseId } = useParams();
   const navigate = useNavigate();
+  const { user, isLoggedIn } = useAuth();
   
   // Course and content state
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessLoading, setAccessLoading] = useState(true);
   
   // Current learning state
   const [currentChapter, setCurrentChapter] = useState(0);
   const [currentLecture, setCurrentLecture] = useState(0);
   const [completedLectures, setCompletedLectures] = useState(new Set());
+  const [currentVideoData, setCurrentVideoData] = useState(null);
+  const [videoLoading, setVideoLoading] = useState(false);
   
   // UI state
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+
+  // Check access on component mount
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!isLoggedIn) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        console.log('Checking access for course:', courseId);
+        const response = await checkCoursePurchase(courseId);
+        console.log('Access check response:', response);
+        
+        if (response.success && response.isEnrolled) {
+          setHasAccess(true);
+        } else {
+          setHasAccess(false);
+          setError('You need to purchase this course to access the content.');
+        }
+      } catch (error) {
+        console.error('Access check failed:', error);
+        setHasAccess(false);
+        setError('Failed to verify course access.');
+      } finally {
+        setAccessLoading(false);
+      }
+    };
+
+    checkAccess();
+  }, [courseId, isLoggedIn, navigate]);
+
+  // Fetch course data
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (!hasAccess) return;
+      
+      try {
+        setLoading(true);
+        console.log('Fetching course data for:', courseId);
+        const response = await getCourseById(courseId);
+        
+        if (response.success && response.course) {
+          setCourse(response.course);
+          console.log('Course data loaded:', response.course);
+          console.log('Chapters:', response.course.chapters);
+          if (response.course.chapters && response.course.chapters.length > 0) {
+            console.log('First chapter content:', response.course.chapters[0]);
+          }
+        } else {
+          setError('Course not found');
+        }
+      } catch (error) {
+        console.error('Failed to fetch course:', error);
+        setError('Failed to load course data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourse();
+  }, [courseId, hasAccess]);
+
+  // Load current lecture video
+  useEffect(() => {
+    const loadCurrentLecture = async () => {
+      if (!course?.chapters?.[currentChapter]?.chapterContent?.[currentLecture]) return;
+
+      const lectureId = course.chapters[currentChapter].chapterContent[currentLecture]._id;
+      if (!lectureId) return;
+
+      try {
+        setVideoLoading(true);
+        console.log('Loading lecture:', lectureId);
+        const response = await getLectureWithAccess(lectureId);
+        
+        if (response.success) {
+          setCurrentVideoData(response.lecture);
+          console.log('Lecture loaded:', response.lecture);
+        } else {
+          console.error('Failed to load lecture:', response.message);
+        }
+      } catch (error) {
+        console.error('Error loading lecture:', error);
+      } finally {
+        setVideoLoading(false);
+      }
+    };
+
+    loadCurrentLecture();
+  }, [course, currentChapter, currentLecture]);
 
   // Navigation functions
   const goToPreviousLecture = useCallback(() => {
@@ -50,13 +149,13 @@ const CourseLearn = () => {
     } else if (currentChapter > 0 && course?.chapters) {
       const prevChapter = course.chapters[currentChapter - 1];
       setCurrentChapter(currentChapter - 1);
-      setCurrentLecture((prevChapter.lectures?.length || 1) - 1);
+      setCurrentLecture((prevChapter.chapterContent?.length || 1) - 1);
     }
   }, [currentLecture, currentChapter, course?.chapters]);
 
   const goToNextLecture = useCallback(() => {
     if (!course?.chapters) return;
-    const currentChapterLectures = course.chapters[currentChapter]?.lectures || [];
+    const currentChapterLectures = course.chapters[currentChapter]?.chapterContent || [];
     if (currentLecture + 1 < currentChapterLectures.length) {
       setCurrentLecture(currentLecture + 1);
     } else if (currentChapter + 1 < course.chapters.length) {
@@ -71,7 +170,7 @@ const CourseLearn = () => {
 
   const canGoNext = useCallback(() => {
     if (!course?.chapters) return false;
-    const currentChapterLectures = course.chapters[currentChapter]?.lectures || [];
+    const currentChapterLectures = course.chapters[currentChapter]?.chapterContent || [];
     return (currentLecture + 1 < currentChapterLectures.length) || 
            (currentChapter + 1 < course.chapters.length);
   }, [currentLecture, currentChapter, course?.chapters]);
@@ -79,6 +178,8 @@ const CourseLearn = () => {
   // Fetch course data
   useEffect(() => {
     const fetchCourseData = async () => {
+      if (!hasAccess) return;
+      
       try {
         setLoading(true);
         const response = await getCourseById(courseId);
@@ -98,7 +199,7 @@ const CourseLearn = () => {
     if (courseId) {
       fetchCourseData();
     }
-  }, [courseId]);
+  }, [courseId, hasAccess]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -148,7 +249,7 @@ const CourseLearn = () => {
     setCompletedLectures(prev => new Set([...prev, lectureKey]));
     
     // Auto-advance to next lecture
-    const currentChapterLectures = course.chapters[chapterIndex]?.lectures || [];
+    const currentChapterLectures = course.chapters[chapterIndex]?.chapterContent || [];
     if (lectureIndex + 1 < currentChapterLectures.length) {
       setCurrentLecture(lectureIndex + 1);
     } else if (chapterIndex + 1 < course.chapters.length) {
@@ -159,10 +260,10 @@ const CourseLearn = () => {
 
   // Get current lecture data
   const getCurrentLecture = () => {
-    if (!course?.chapters?.[currentChapter]?.lectures?.[currentLecture]) {
+    if (!course?.chapters?.[currentChapter]?.chapterContent?.[currentLecture]) {
       return null;
     }
-    return course.chapters[currentChapter].lectures[currentLecture];
+    return course.chapters[currentChapter].chapterContent[currentLecture];
   };
 
   // Calculate progress
@@ -170,7 +271,7 @@ const CourseLearn = () => {
     if (!course?.chapters) return 0;
     
     const totalLectures = course.chapters.reduce((total, chapter) => 
-      total + (chapter.lectures?.length || 0), 0
+      total + (chapter.chapterContent?.length || 0), 0
     );
     
     return totalLectures > 0 ? (completedLectures.size / totalLectures) * 100 : 0;
@@ -180,14 +281,14 @@ const CourseLearn = () => {
     return completedLectures.has(`${chapterIndex}-${lectureIndex}`);
   };
 
-  const currentLectureData = getCurrentLecture();
-
-  if (loading) {
+  if (accessLoading || loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading course content...</p>
+          <p className="text-slate-400">
+            {accessLoading ? 'Verifying access...' : 'Loading course content...'}
+          </p>
         </div>
       </div>
     );
@@ -251,7 +352,7 @@ const CourseLearn = () => {
           </div>
           
           <p className="text-slate-400 text-sm">
-            {completedLectures.size} of {course?.chapters?.reduce((total, chapter) => total + (chapter.lectures?.length || 0), 0)} lectures completed
+            {completedLectures.size} of {course?.chapters?.reduce((total, chapter) => total + (chapter.chapterContent?.length || 0), 0)} lectures completed
           </p>
         </div>
 
@@ -261,11 +362,11 @@ const CourseLearn = () => {
             <div key={chapter._id} className="border-b border-slate-800">
               <div className="p-4">
                 <h3 className="text-white font-medium mb-3">
-                  Chapter {chapterIndex + 1}: {chapter.title}
+                  Chapter {chapterIndex + 1}: {chapter.chapterTitle}
                 </h3>
                 
                 <div className="space-y-2">
-                  {chapter.lectures?.map((lecture, lectureIndex) => (
+                  {chapter.chapterContent?.map((lecture, lectureIndex) => (
                     <button
                       key={lecture._id}
                       onClick={() => {
@@ -337,7 +438,7 @@ const CourseLearn = () => {
               
               <div>
                 <h1 className="text-white font-semibold">
-                  {currentLectureData?.title || 'Select a lecture'}
+                  {currentVideoData?.title || 'Select a lecture'}
                 </h1>
                 <p className="text-slate-400 text-sm">
                   Chapter {currentChapter + 1} - Lecture {currentLecture + 1}
@@ -394,13 +495,41 @@ const CourseLearn = () => {
         {/* Video/Content Area */}
         <div className="flex-1 flex">
           <div className="flex-1 bg-black relative">
-            {currentLectureData ? (
+            {accessLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center text-white">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+                  <p>Verifying access...</p>
+                </div>
+              </div>
+            ) : !hasAccess ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center text-white max-w-md mx-auto p-8">
+                  <Lock className="w-16 h-16 mx-auto mb-4 text-red-400" />
+                  <h3 className="text-xl font-semibold mb-2">Access Denied</h3>
+                  <p className="text-slate-300 mb-4">{error || 'You need to purchase this course to access the content.'}</p>
+                  <button
+                    onClick={() => navigate(`/course/${courseId}`)}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    Back to Course
+                  </button>
+                </div>
+              </div>
+            ) : videoLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center text-white">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+                  <p>Loading lecture...</p>
+                </div>
+              </div>
+            ) : currentVideoData ? (
               <div className="w-full h-full">
-                {currentLectureData.videoUrl ? (
+                {currentVideoData.videoUrl ? (
                   <div className="w-full h-full relative">
                     {/* Video Player */}
                     <video
-                      key={currentLectureData._id} // Force re-render when lecture changes
+                      key={currentVideoData._id} // Force re-render when lecture changes
                       className="w-full h-full object-contain"
                       controls
                       onPlay={() => setIsVideoPlaying(true)}
@@ -411,18 +540,18 @@ const CourseLearn = () => {
                       }}
                       poster={course?.thumbnail} // Use course thumbnail as poster
                     >
-                      <source src={currentLectureData.videoUrl} type="video/mp4" />
-                      <source src={currentLectureData.videoUrl} type="video/webm" />
-                      <source src={currentLectureData.videoUrl} type="video/ogg" />
+                      <source src={currentVideoData.videoUrl} type="video/mp4" />
+                      <source src={currentVideoData.videoUrl} type="video/webm" />
+                      <source src={currentVideoData.videoUrl} type="video/ogg" />
                       Your browser does not support the video tag.
                     </video>
 
                     {/* Custom Overlay for Better UX */}
                     <div className="absolute top-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-4 text-white">
-                      <h3 className="font-semibold text-lg mb-1">{currentLectureData.title}</h3>
+                      <h3 className="font-semibold text-lg mb-1">{currentVideoData.title}</h3>
                       <p className="text-sm text-slate-300">
                         Chapter {currentChapter + 1}, Lecture {currentLecture + 1}
-                        {currentLectureData.duration && ` • ${currentLectureData.duration}`}
+                        {currentVideoData.duration && ` • ${currentVideoData.duration}`}
                       </p>
                     </div>
 
@@ -456,7 +585,7 @@ const CourseLearn = () => {
                         <FileText className="w-12 h-12 text-blue-400" />
                       </div>
                       <h3 className="text-white text-xl font-semibold mb-2">
-                        {currentLectureData.title}
+                        {getCurrentLecture()?.title || 'Lecture Content'}
                       </h3>
                       <p className="text-slate-400 mb-4">
                         This lecture contains text content or resources

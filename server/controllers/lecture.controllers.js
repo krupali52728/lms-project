@@ -1,6 +1,7 @@
 import Course from "../model/course.model.js";
 import Chapter from "../model/chapter.model.js";
 import Lecture from "../model/lecture.model.js";
+import User from "../model/user.model.js";
 
 // Create a new lecture
 export const createLecture = async (req, res) => {
@@ -220,5 +221,68 @@ export const reorderLectures = async (req, res) => {
     res.status(200).json({ success: true, lectures: updatedLectures });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get lecture with access control
+export const getLectureWithAccess = async (req, res) => {
+  try {
+    const { lectureId } = req.params;
+    const { userId } = req.user;
+
+    console.log('Getting lecture with access control:', lectureId, 'for user:', userId);
+
+    // Find the lecture with course and chapter details
+    const lecture = await Lecture.findById(lectureId)
+      .populate({
+        path: 'chapter',
+        populate: {
+          path: 'course',
+          model: 'Course'
+        }
+      });
+
+    if (!lecture) {
+      return res.status(404).json({
+        success: false,
+        message: "Lecture not found"
+      });
+    }
+
+    const courseId = lecture.chapter.course._id;
+    console.log('Lecture belongs to course:', courseId);
+
+    // Check if user has purchased/enrolled in this course
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const isEnrolled = user.enrolledCourse.includes(courseId);
+    const isEducator = lecture.chapter.course.educator.toString() === userId.toString();
+
+    console.log('User enrollment status:', isEnrolled, 'Is educator:', isEducator);
+
+    if (!isEnrolled && !isEducator) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Please purchase this course to view lectures."
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      lecture,
+      hasAccess: true
+    });
+  } catch (error) {
+    console.error('Get lecture with access error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };

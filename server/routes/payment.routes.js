@@ -1,5 +1,7 @@
 import express from 'express';
 import Stripe from 'stripe';
+import { authenticate } from '../middleware/authMiddleaare.js';
+import { userPurchaseCourse } from '../controllers/user.controllers.js';
 
 
 const paymentRouter = express.Router();
@@ -10,6 +12,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 paymentRouter.post('/create-checkout-session', async (req, res) => {
   try {
     const { courseId, courseName, coursePrice, courseImage } = req.body;
+
+    console.log('Creating checkout session:', { courseId, courseName, coursePrice });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -35,6 +39,8 @@ paymentRouter.post('/create-checkout-session', async (req, res) => {
       },
     });
 
+    console.log('Checkout session created:', session.id);
+
     res.status(200).json({ 
       success: true,
       sessionId: session.id,
@@ -49,19 +55,62 @@ paymentRouter.post('/create-checkout-session', async (req, res) => {
   }
 });
 
-// Verify checkout session
-paymentRouter.post('/verify-session', async (req, res) => {
+// Verify checkout session and complete purchase
+paymentRouter.post('/verify-session', authenticate, async (req, res) => {
   try {
     const { sessionId } = req.body;
+    const { userId } = req.user;
+
+    console.log('Verifying payment session:', sessionId, 'for user:', userId);
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-
+    
     if (session.payment_status === 'paid') {
-      res.status(200).json({
-        success: true,
-        session: session,
-        courseId: session.metadata.courseId,
-      });
+      const courseId = session.metadata.courseId;
+      
+      console.log('Payment verified successfully, processing purchase for course:', courseId);
+      
+      // Process the purchase by calling the purchase controller
+      const purchaseReq = {
+        params: { courseId },
+        user: { userId },
+        body: { sessionId, paymentMethod: 'stripe' }
+      };
+      
+      // Create a mock response object to capture the purchase result
+      let purchaseResult = null;
+      let purchaseStatus = 200;
+      
+      const mockRes = {
+        status: (code) => {
+          purchaseStatus = code;
+          return {
+            json: (data) => {
+              purchaseResult = data;
+              return data;
+            }
+          };
+        }
+      };
+      
+      // Call the purchase controller
+      await userPurchaseCourse(purchaseReq, mockRes);
+      
+      if (purchaseStatus === 200 && purchaseResult?.success) {
+        res.status(200).json({
+          success: true,
+          session: session,
+          courseId: courseId,
+          purchase: purchaseResult.purchase,
+          message: 'Payment verified and purchase completed successfully'
+        });
+      } else {
+        console.log('Purchase processing failed:', purchaseResult);
+        res.status(400).json({
+          success: false,
+          message: purchaseResult?.message || 'Failed to complete purchase',
+        });
+      }
     } else {
       res.status(400).json({
         success: false,

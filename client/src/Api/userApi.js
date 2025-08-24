@@ -54,3 +54,14 @@ export const rateCourse = async (courseId, ratingData) => {
     throw error;
   }
 };
+
+//  Check Course Purchase Status
+export const checkCoursePurchase = async (courseId) => {
+  try {
+    const res = await api.get(`/user/purchase-status/${courseId}`);
+    return res.data;
+  } catch (error) {
+    console.error(`Error checking purchase status for course ${courseId}:`, error);
+    throw error;
+  }
+};

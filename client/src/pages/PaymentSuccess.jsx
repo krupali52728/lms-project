@@ -21,13 +21,15 @@ const PaymentSuccess = () => {
       }
 
       try {
+        console.log('Verifying payment for session:', sessionId);
         const response = await verifyPayment(sessionId);
+        console.log('Payment verification response:', response);
         
         if (response.success) {
           setStatus('success');
           setMessage('Payment completed successfully! You now have access to the course.');
           
-          // Redirect to course after 3 seconds
+          // Redirect to course learning page after 3 seconds
           setTimeout(() => {
             if (courseId) {
               navigate(`/course/${courseId}/learn`);

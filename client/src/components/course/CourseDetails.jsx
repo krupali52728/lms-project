@@ -16,17 +16,25 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { getCourseById } from '../../Api/courseApi.js';
+import { checkCoursePurchase } from '../../Api/userApi.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import StripeCheckoutButton from '../Payment/StripeCheckoutButton';
 
 const CourseDetails = () => {
   const params = useParams();
   const { id: courseId } = params; // Extract 'id' parameter and rename it to 'courseId'
   const navigate = useNavigate();
+  const { user, isLoggedIn } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedSection, setExpandedSection] = useState(null);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [purchaseStatus, setPurchaseStatus] = useState({
+    isEnrolled: false,
+    hasPurchased: false,
+    loading: true
+  });
 
   console.log("URL params:", params);
   console.log("Extracted courseId:", courseId);
@@ -53,6 +61,38 @@ const CourseDetails = () => {
     }
   };
 
+  const checkPurchaseStatus = async () => {
+    if (!isLoggedIn || !courseId) {
+      setPurchaseStatus({
+        isEnrolled: false,
+        hasPurchased: false,
+        loading: false
+      });
+      return;
+    }
+
+    try {
+      console.log("Checking purchase status for course:", courseId);
+      const response = await checkCoursePurchase(courseId);
+      console.log("Purchase status response:", response);
+      
+      if (response.success) {
+        setPurchaseStatus({
+          isEnrolled: response.isEnrolled,
+          hasPurchased: response.hasPurchased,
+          loading: false
+        });
+      }
+    } catch (error) {
+      console.error("Error checking purchase status:", error);
+      setPurchaseStatus({
+        isEnrolled: false,
+        hasPurchased: false,
+        loading: false
+      });
+    }
+  };
+
   useEffect(() => {
     console.log("CourseDetails component mounted with courseId:", courseId);
     if (courseId) {
@@ -63,6 +103,16 @@ const CourseDetails = () => {
       setLoading(false);
     }
   }, [courseId]);
+
+  useEffect(() => {
+    checkPurchaseStatus();
+  }, [courseId, isLoggedIn, user]);
+
+  const handleExplore = () => {
+    if (course && purchaseStatus.isEnrolled) {
+      navigate(`/course/${courseId}/learn`);
+    }
+  };
 
   const handleBuyNow = () => {
     if (!course) return;
@@ -454,7 +504,28 @@ const CourseDetails = () => {
 
                 {/* Buy Button */}
                 <div className="mb-4">
-                  {course.isPublished ? (
+                  {!isLoggedIn ? (
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="w-full py-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors text-lg"
+                    >
+                      Login to Enroll
+                    </button>
+                  ) : purchaseStatus.loading ? (
+                    <button
+                      disabled
+                      className="w-full py-4 font-semibold rounded-xl bg-slate-700 text-slate-400 cursor-not-allowed text-lg"
+                    >
+                      Loading...
+                    </button>
+                  ) : purchaseStatus.isEnrolled ? (
+                    <button
+                      onClick={handleExplore}
+                      className="w-full py-4 font-semibold rounded-xl bg-green-600 hover:bg-green-700 text-white transition-colors text-lg"
+                    >
+                      Explore Course
+                    </button>
+                  ) : course.isPublished ? (
                     <StripeCheckoutButton
                       course={course}
                       buttonText="Enroll Now"
@@ -463,7 +534,7 @@ const CourseDetails = () => {
                   ) : (
                     <button
                       disabled
-                      className="w-full py-4 font-semibold rounded-xl bg-slate-700 text-slate-400 cursor-not-allowed"
+                      className="w-full py-4 font-semibold rounded-xl bg-slate-700 text-slate-400 cursor-not-allowed text-lg"
                     >
                       Not Available
                     </button>
@@ -503,7 +574,7 @@ const CourseDetails = () => {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3 text-slate-300">
                       <Play className="w-4 h-4" />
-                      <span>{course.chapters?.reduce((total, chapter) => total + (chapter.lectures?.length || 0), 0) || 0} video lectures</span>
+                      <span>{course.chapters?.reduce((total, chapter) => total + (chapter.chapterContent?.length || 0), 0) || 0} video lectures</span>
                     </div>
                     <div className="flex items-center space-x-3 text-slate-300">
                       <Download className="w-4 h-4" />

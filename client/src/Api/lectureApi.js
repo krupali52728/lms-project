@@ -59,3 +59,13 @@ export const getLecturesByCourse = async (courseId) => {
         throw error.response?.data || { message: "Something went wrong" };
     }
 };
+
+export const getLectureWithAccess = async (lectureId) => {
+    try {
+        const res = await api.get(`/lecture/access/${lectureId}`);
+        return res.data;
+    } catch (error) {
+        console.log("Get lecture with access error:", error.response?.data || error.message);
+        throw error.response?.data || { message: "Access denied or lecture not found" };
+    }
+};

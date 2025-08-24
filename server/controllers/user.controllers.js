@@ -114,7 +114,9 @@ export const userPurchaseCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
     const { userId } = req.user;
-    const { paymentMethod, paymentDetails } = req.body;
+    const { sessionId, paymentMethod = 'stripe' } = req.body;
+
+    console.log('Processing purchase for user:', userId, 'course:', courseId);
 
     // Check if user exists and is a student
     const user = await User.findById(userId);
@@ -125,7 +127,7 @@ export const userPurchaseCourse = async (req, res) => {
       });
     }
 
-    if (user.role !== 'student' && user.role !== 'educator') {
+    if (user.role !== 'student') {
       return res.status(403).json({
         success: false,
         message: "Only students can purchase courses"
@@ -149,7 +151,13 @@ export const userPurchaseCourse = async (req, res) => {
     }
 
     // Check if already purchased/enrolled
-    if (user.enrolledCourse.includes(courseId)) {
+    const existingPurchase = await Purchase.findOne({
+      user: userId,
+      course: courseId
+    });
+
+    if (existingPurchase || user.enrolledCourse.includes(courseId)) {
+      console.log('User already purchased this course');
       return res.status(400).json({
         success: false,
         message: "Course already purchased"
@@ -157,43 +165,49 @@ export const userPurchaseCourse = async (req, res) => {
     }
 
     // Calculate final price after discount
-    const finalPrice = course.price - (course.price * course.discount / 100);
+    const finalPrice = course.price - (course.price * (course.discount || 0) / 100);
+    
+    console.log('Course price:', course.price, 'Final price after discount:', finalPrice);
 
-    // Here you would integrate with payment gateway (Stripe, PayPal, etc.)
-    // For now, we'll simulate a successful payment
-    const paymentSuccess = true; // This would come from your payment processor
+    // Create purchase record in database
+    const purchase = new Purchase({
+      user: userId,
+      course: courseId,
+      price: finalPrice,
+      purchaseDate: new Date()
+    });
 
-    if (!paymentSuccess) {
-      return res.status(400).json({
-        success: false,
-        message: "Payment failed. Please try again."
-      });
-    }
+    await purchase.save();
+    console.log('Purchase record saved:', purchase._id);
 
-    // If payment successful, enroll user
+    // Enroll user in course
     user.enrolledCourse.push(courseId);
     course.enrolledStudents.push(userId);
 
     await user.save();
     await course.save();
+    
+    console.log('User enrolled in course successfully');
 
     res.status(200).json({
       success: true,
       message: "Course purchased and enrolled successfully",
       purchase: {
+        _id: purchase._id,
         course: {
           _id: course._id,
           title: course.title,
           educator: course.educator.name,
           originalPrice: course.price,
-          discount: course.discount,
+          discount: course.discount || 0,
           finalPrice: finalPrice
         },
         paymentMethod,
-        purchaseDate: new Date()
+        purchaseDate: purchase.purchaseDate
       }
     });
   } catch (error) {
+    console.error('Purchase error:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -373,4 +387,46 @@ export const userRating = async(req,res) =>{
       message: error.message
     });    
   } 
+}
+
+// Check if user has purchased a course
+export const checkCoursePurchase = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { userId } = req.user;
+
+    console.log('Checking purchase status for user:', userId, 'course:', courseId);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if user is enrolled
+    const isEnrolled = user.enrolledCourse.includes(courseId);
+    
+    // Check if there's a purchase record
+    const purchase = await Purchase.findOne({
+      user: userId,
+      course: courseId
+    }).populate('course', 'title price');
+
+    console.log('Enrollment status:', isEnrolled, 'Purchase record:', !!purchase);
+
+    res.status(200).json({
+      success: true,
+      isEnrolled,
+      hasPurchased: !!purchase,
+      purchase: purchase || null
+    });
+  } catch (error) {
+    console.error('Check purchase error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 }

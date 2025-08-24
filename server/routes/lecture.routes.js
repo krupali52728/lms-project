@@ -6,7 +6,8 @@ import {
   getLecturesByCourse,
   getLectureById,
   deleteLecture,
-  reorderLectures
+  reorderLectures,
+  getLectureWithAccess
 } from '../controllers/lecture.controllers.js';
 
 const lectureRouter = express.Router();
@@ -15,6 +16,9 @@ const lectureRouter = express.Router();
 lectureRouter.get('/chapter/:chapterId', getLecturesByChapter); 
 lectureRouter.get('/course/:courseId', getLecturesByCourse); 
 lectureRouter.get('/:lectureId', getLectureById); 
+
+// Protected routes for accessing lecture content (requires enrollment)
+lectureRouter.get('/access/:lectureId', authenticate, getLectureWithAccess);
 
 // Protected routes (educators only)
 lectureRouter.post('/:courseId/:chapterId', authenticate, authorize('educator'), createLecture); 
