@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           {/* Logo and slogan */}
           <div className="flex flex-col items-center sm:items-start">
-            <div className="font-bold text-lg mb-1">Learn<span className="text-[#0074D9]">Smart</span></div>
+            <div className="font-bold text-lg mb-1">Course<span className="text-[#0074D9]">Connect</span></div>
             <p className="text-[#94a3b8] text-xs mb-2">Empowering learners worldwide with quality education</p>
           </div>
 
@@ -35,7 +35,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="text-center text-[#94a3b8] text-xs pt-1">
-          <p>© {new Date().getFullYear()} LearnSmart Education Platform</p>
+          <p>© {new Date().getFullYear()} CourseConnect Education Platform</p>
         </div>
       </div>
     </footer>

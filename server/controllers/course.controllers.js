@@ -129,7 +129,6 @@ export const enrollInCourse = async (req, res) => {
     }
 
     // Add student to course
-    course.enrolledStudents.push(userId);
     await course.save();
 
     // Add course to user's enrolled courses
@@ -163,7 +162,6 @@ export const getCourseEducator = async (req, res) => {
 export const getCourseById = async (req, res) => {
   try {
     const { courseId } = req.params;
-    console.log('Fetching course with ID:', courseId);
 
     const course = await Course.findById(courseId)
       .populate("educator", "name email avatar")
@@ -179,8 +177,6 @@ export const getCourseById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
 
-    console.log('Course fetched successfully:', course.title);
-    console.log('Number of chapters:', course.chapters?.length || 0);
 
     res.status(200).json({ success: true, course });
   } catch (error) {

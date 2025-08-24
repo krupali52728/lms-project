@@ -230,7 +230,6 @@ export const getLectureWithAccess = async (req, res) => {
     const { lectureId } = req.params;
     const { userId } = req.user;
 
-    console.log('Getting lecture with access control:', lectureId, 'for user:', userId);
 
     // Find the lecture with course and chapter details
     const lecture = await Lecture.findById(lectureId)
@@ -250,7 +249,6 @@ export const getLectureWithAccess = async (req, res) => {
     }
 
     const courseId = lecture.chapter.course._id;
-    console.log('Lecture belongs to course:', courseId);
 
     // Check if user has purchased/enrolled in this course
     const user = await User.findById(userId);
@@ -264,7 +262,6 @@ export const getLectureWithAccess = async (req, res) => {
     const isEnrolled = user.enrolledCourse.includes(courseId);
     const isEducator = lecture.chapter.course.educator.toString() === userId.toString();
 
-    console.log('User enrollment status:', isEnrolled, 'Is educator:', isEducator);
 
     if (!isEnrolled && !isEducator) {
       return res.status(403).json({

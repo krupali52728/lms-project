@@ -116,7 +116,7 @@ export const userPurchaseCourse = async (req, res) => {
     const { userId } = req.user;
     const { sessionId, paymentMethod = 'stripe' } = req.body;
 
-    console.log('Processing purchase for user:', userId, 'course:', courseId);
+    // console.log('Processing purchase for user:', userId, 'course:', courseId);
 
     // Check if user exists and is a student
     const user = await User.findById(userId);
@@ -167,7 +167,7 @@ export const userPurchaseCourse = async (req, res) => {
     // Calculate final price after discount
     const finalPrice = course.price - (course.price * (course.discount || 0) / 100);
     
-    console.log('Course price:', course.price, 'Final price after discount:', finalPrice);
+    // console.log('Course price:', course.price, 'Final price after discount:', finalPrice);
 
     // Create purchase record in database
     const purchase = new Purchase({
@@ -178,7 +178,7 @@ export const userPurchaseCourse = async (req, res) => {
     });
 
     await purchase.save();
-    console.log('Purchase record saved:', purchase._id);
+    // console.log('Purchase record saved:', purchase._id);
 
     // Enroll user in course
     user.enrolledCourse.push(courseId);
@@ -395,7 +395,6 @@ export const checkCoursePurchase = async (req, res) => {
     const { courseId } = req.params;
     const { userId } = req.user;
 
-    console.log('Checking purchase status for user:', userId, 'course:', courseId);
 
     const user = await User.findById(userId);
     if (!user) {
@@ -414,7 +413,6 @@ export const checkCoursePurchase = async (req, res) => {
       course: courseId
     }).populate('course', 'title price');
 
-    console.log('Enrollment status:', isEnrolled, 'Purchase record:', !!purchase);
 
     res.status(200).json({
       success: true,

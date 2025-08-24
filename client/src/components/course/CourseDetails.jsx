@@ -19,6 +19,7 @@ import { getCourseById } from '../../Api/courseApi.js';
 import { checkCoursePurchase } from '../../Api/userApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import StripeCheckoutButton from '../Payment/StripeCheckoutButton';
+import './CourseDetails.css';
 
 const CourseDetails = () => {
   const params = useParams();
@@ -36,20 +37,17 @@ const CourseDetails = () => {
     loading: true
   });
 
-  console.log("URL params:", params);
-  console.log("Extracted courseId:", courseId);
+
 
   const fetchCourseDetails = async () => {
     try {
-      console.log("Fetching course details for ID:", courseId);
       setLoading(true);
       setError(null);
       const response = await getCourseById(courseId);
-      console.log("Course details API response:", response);
       
       if (response.success && response.course) {
         setCourse(response.course);
-        console.log("Course details set:", response.course);
+        console.log("Course details set:", response.course);  
       } else {
         throw new Error(response.message || "Failed to fetch course details");
       }
@@ -128,19 +126,19 @@ const CourseDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-24">
-        <div className="container mx-auto px-6 lg:px-8 pb-16">
-          <div className="grid lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-16 md:pt-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8 md:pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
+            <div className="lg:col-span-2 order-2 lg:order-1 space-y-6 md:space-y-8">
               <div className="animate-pulse">
-                <div className="bg-slate-800 h-8 rounded w-3/4 mb-4"></div>
-                <div className="bg-slate-800 h-12 rounded w-full mb-4"></div>
-                <div className="bg-slate-800 h-6 rounded w-2/3 mb-6"></div>
-                <div className="bg-slate-800 h-64 rounded-2xl"></div>
+                <div className="bg-slate-800 h-6 md:h-8 rounded w-3/4 mb-4"></div>
+                <div className="bg-slate-800 h-8 md:h-12 rounded w-full mb-4"></div>
+                <div className="bg-slate-800 h-4 md:h-6 rounded w-2/3 mb-6"></div>
+                <div className="bg-slate-800 h-48 md:h-64 rounded-lg md:rounded-2xl"></div>
               </div>
             </div>
-            <div className="lg:col-span-1">
-              <div className="animate-pulse bg-slate-800 h-96 rounded-3xl"></div>
+            <div className="lg:col-span-1 order-1 lg:order-2">
+              <div className="animate-pulse bg-slate-800 h-80 md:h-96 rounded-lg md:rounded-3xl"></div>
             </div>
           </div>
         </div>
@@ -150,22 +148,22 @@ const CourseDetails = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-24">
-        <div className="container mx-auto px-6 lg:px-8 pb-16">
-          <div className="text-center py-12">
-            <div className="bg-red-900/20 border border-red-500/20 rounded-xl p-8 max-w-md mx-auto">
-              <h2 className="text-red-400 text-2xl font-bold mb-4">Error Loading Course</h2>
-              <p className="text-slate-400 mb-6">{error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-16 md:pt-24">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8 md:pb-16">
+          <div className="text-center py-8 md:py-12">
+            <div className="bg-red-900/20 border border-red-500/20 rounded-lg md:rounded-xl p-6 md:p-8 max-w-md mx-auto">
+              <h2 className="text-red-400 text-xl md:text-2xl font-bold mb-4">Error Loading Course</h2>
+              <p className="text-slate-400 mb-4 md:mb-6 text-sm md:text-base">{error}</p>
               <div className="space-y-3">
                 <button
                   onClick={fetchCourseDetails}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
+                  className="px-4 md:px-6 py-2 md:py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg md:rounded-xl transition-colors text-sm md:text-base"
                 >
                   Try Again
                 </button>
                 <button
                   onClick={() => navigate('/search')}
-                  className="block w-full px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors"
+                  className="block w-full px-4 md:px-6 py-2 md:py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg md:rounded-xl transition-colors text-sm md:text-base"
                 >
                   Browse Courses
                 </button>
@@ -199,66 +197,39 @@ const CourseDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-24">
-      <div className="container mx-auto px-6 lg:px-8 pb-16">
-        <div className="grid lg:grid-cols-3 gap-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-16 md:pt-24">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-8 md:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-2 lg:order-1">
             {/* Course Header */}
             <motion.div
               variants={fadeInUp}
               initial="initial"
               animate="animate"
-              className="mb-8"
+              className="mb-6 md:mb-8"
             >
-              <div className="flex items-center space-x-2 mb-4">
-                <span className="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-full text-sm">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <span className="px-2 md:px-3 py-1 bg-blue-600/20 text-blue-300 rounded-full text-xs md:text-sm">
                   {course.category || 'General'}
                 </span>
                 {course.isPublished && (
-                  <span className="px-3 py-1 bg-green-600/20 text-green-300 rounded-full text-sm">
+                  <span className="px-2 md:px-3 py-1 bg-green-600/20 text-green-300 rounded-full text-xs md:text-sm">
                     Available
                   </span>
                 )}
               </div>
-              
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                {course.title}
-              </h1>
-              
-              <p className="text-xl text-slate-300 mb-6 leading-relaxed">
-                {course.description}
-              </p>
-              
-              <div className="flex items-center space-x-6 text-slate-300">
-                <div className="flex items-center space-x-2">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-5 h-5 ${i < Math.floor(course.rating || 4) ? 'fill-current' : ''}`} />
-                    ))}
-                  </div>
-                  <span>{course.rating || '4.0'} ({course.reviews?.length || 0} reviews)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" />
-                  <span>{course.enrolledStudents?.length || 0} students</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
-                  <span>{course.duration || 'N/A'}</span>
-                </div>
-              </div>
             </motion.div>
 
-            {/* Video Preview */}
+            {/* Course Thumbnail */}
             <motion.div
               variants={fadeInUp}
               initial="initial"
               animate="animate"
               transition={{ delay: 0.2 }}
-              className="relative mb-8"
+              className="relative mb-6 md:mb-8"
             >
-              <div className="aspect-video bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden">
+              <div className="aspect-video bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg md:rounded-xl overflow-hidden shadow-lg relative">
                 {course.thumbnail ? (
                   <img
                     src={course.thumbnail}
@@ -266,19 +237,61 @@ const CourseDetails = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600" />
+                  <div className="w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 flex items-center justify-center">
+                    <BookOpen className="w-16 h-16 md:w-20 md:h-20 text-white/80" />
+                  </div>
                 )}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <button className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300">
-                    <Play className="w-8 h-8 text-white ml-1" />
-                  </button>
+                
+                {/* Play Button Overlay - Only show if user has purchased */}
+                {purchaseStatus.isEnrolled && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <button
+                      onClick={handleExplore}
+                      className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-2xl"
+                      aria-label="Open course"
+                    >
+                      <Play className="w-6 h-6 md:w-8 md:h-8" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Course Badge */}
+                <div className="absolute top-3 md:top-4 left-3 md:left-4">
+                  <span className="px-2 md:px-3 py-1 bg-black/50 backdrop-blur-sm text-white text-xs md:text-sm rounded-full border border-white/20">
+                    {course.category || 'Course'}
+                  </span>
                 </div>
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3">
-                    <div className="flex items-center justify-between text-white text-sm">
-                      <span>Preview: {course.title}</span>
-                      <span>Preview</span>
+              </div>
+
+              {/* Course Info Below Thumbnail */}
+              <div className="mt-4 space-y-3">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-white leading-tight">
+                  {course.title}
+                </h1>
+                
+                <p className="text-slate-300 text-sm md:text-base line-clamp-2 md:line-clamp-3">
+                  {course.description}
+                </p>
+                
+                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-slate-300">
+                  <div className="flex items-center space-x-1">
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3 h-3 md:w-4 md:h-4 ${i < Math.floor(course.rating || 4) ? 'fill-current' : ''}`} />
+                      ))}
                     </div>
+                    <span className="ml-1 text-xs md:text-sm">{course.rating || '4.0'}</span>
+                    <span className="text-slate-400 text-xs md:text-sm hidden sm:inline">({course.reviews?.length || 0} reviews)</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="text-xs md:text-sm">{course.enrolledStudents?.length || 0} students</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="text-xs md:text-sm">{course.duration || 'Self-paced'}</span>
                   </div>
                 </div>
               </div>
@@ -290,18 +303,21 @@ const CourseDetails = () => {
               initial="initial"
               animate="animate"
               transition={{ delay: 0.3 }}
-              className="mb-8"
+              className="mb-6 md:mb-8"
             >
-              <div className="border-b border-slate-700">
-                <nav className="flex space-x-8">
+              <div className="bg-slate-800/30 rounded-lg md:rounded-xl p-1 backdrop-blur-sm border border-slate-700/50">
+                <nav className="flex space-x-1 overflow-x-auto scrollbar-hide" role="tablist">
                   {['overview', 'curriculum', 'instructor', 'reviews'].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`py-4 px-2 border-b-2 font-medium text-sm capitalize transition-colors duration-200 ${
+                      role="tab"
+                      aria-selected={activeTab === tab}
+                      aria-controls={`${tab}-panel`}
+                      className={`flex-1 min-w-0 py-2 md:py-3 px-2 md:px-4 rounded-md md:rounded-lg font-medium text-xs md:text-sm capitalize transition-all duration-200 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${
                         activeTab === tab
-                          ? 'border-blue-500 text-blue-400'
-                          : 'border-transparent text-slate-400 hover:text-slate-300'
+                          ? 'bg-blue-600 text-white shadow-lg'
+                          : 'text-slate-400 hover:text-slate-300 hover:bg-slate-700/50'
                       }`}
                     >
                       {tab}
@@ -317,86 +333,81 @@ const CourseDetails = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8"
+              className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-lg md:rounded-2xl p-4 md:p-6 shadow-lg"
+              role="tabpanel"
+              id={`${activeTab}-panel`}
+              aria-labelledby={`${activeTab}-tab`}
             >
               {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-semibold text-white mb-4">What you'll learn</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-4 md:space-y-6">
+                  <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">What you'll learn</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                     {course.learningObjectives && course.learningObjectives.length > 0 ? (
                       course.learningObjectives.map((objective, i) => (
-                        <div key={i} className="flex items-start space-x-3">
-                          <Award className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" />
-                          <span className="text-slate-300">{objective}</span>
+                        <div key={i} className="flex items-start space-x-2 md:space-x-3">
+                          <Award className="w-3 h-3 md:w-4 md:h-4 text-green-400 mt-1 flex-shrink-0" />
+                          <span className="text-slate-300 text-sm md:text-base">{objective}</span>
                         </div>
                       ))
                     ) : (
-                      [...Array(6)].map((_, i) => (
-                        <div key={i} className="flex items-start space-x-3">
-                          <Award className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" />
-                          <span className="text-slate-300">Learning objective from this comprehensive course</span>
-                        </div>
-                      ))
+                      <div className="text-slate-400 text-sm md:text-base col-span-full">No learning objectives specified for this course.</div>
                     )}
                   </div>
                   
-                  <h3 className="text-2xl font-semibold text-white mb-4 mt-8">Requirements</h3>
-                  <ul className="space-y-2">
-                    {course.requirements && course.requirements.length > 0 ? (
-                      course.requirements.map((requirement, i) => (
-                        <li key={i} className="flex items-start space-x-3 text-slate-300">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                          <span>{requirement}</span>
-                        </li>
-                      ))
-                    ) : (
-                      [...Array(3)].map((_, i) => (
-                        <li key={i} className="flex items-start space-x-3 text-slate-300">
-                          <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                          <span>Basic understanding of programming concepts</span>
-                        </li>
-                      ))
-                    )}
-                  </ul>
+                  {course.requirements && course.requirements.length > 0 && (
+                    <>
+                      <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4 mt-4 md:mt-6">Requirements</h3>
+                      <ul className="space-y-2">
+                        {course.requirements.map((requirement, i) => (
+                          <li key={i} className="flex items-start space-x-2 md:space-x-3 text-slate-300">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                            <span className="text-sm md:text-base">{requirement}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </div>
               )}
 
               {activeTab === 'curriculum' && (
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-semibold text-white mb-6">Course Content</h3>
-                  <div className="text-slate-300 mb-6">
-                    {course.chapters?.length || 0} chapters • {course.chapters?.reduce((total, chapter) => total + (chapter.lectures?.length || 0), 0) || 0} lectures
+                  <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">Course Content</h3>
+                  <div className="text-slate-300 mb-4 text-sm md:text-base">
+                    {course.chapters?.length || 0} chapters • {course.chapters?.reduce((total, chapter) => total + (chapter.chapterContent?.length || 0), 0) || 0} lectures
                   </div>
                   
                   {course.chapters && course.chapters.length > 0 ? (
                     course.chapters.map((chapter, i) => (
-                      <div key={chapter._id} className="border border-slate-600/50 rounded-xl overflow-hidden">
+                      <div key={chapter._id} className="border border-slate-600/50 rounded-lg overflow-hidden">
                         <button
                           onClick={() => setExpandedSection(expandedSection === i ? null : i)}
-                          className="w-full p-4 text-left bg-slate-700/30 hover:bg-slate-700/50 transition-colors duration-200"
+                          className="w-full p-3 md:p-4 text-left bg-slate-700/30 hover:bg-slate-700/50 transition-colors duration-200"
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <h4 className="text-white font-medium">Chapter {i + 1}: {chapter.title}</h4>
-                              <p className="text-slate-400 text-sm">{chapter.lectures?.length || 0} lectures</p>
+                              <h4 className="text-white font-medium text-sm md:text-base">Chapter {i + 1}: {chapter.chapterTitle}</h4>
+                              <p className="text-slate-400 text-xs md:text-sm">{chapter.chapterContent?.length || 0} lectures</p>
                             </div>
                             {expandedSection === i ? (
-                              <ChevronUp className="w-5 h-5 text-slate-400" />
+                              <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-slate-400 flex-shrink-0" />
                             ) : (
-                              <ChevronDown className="w-5 h-5 text-slate-400" />
+                              <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-slate-400 flex-shrink-0" />
                             )}
                           </div>
                         </button>
                         
-                        {expandedSection === i && chapter.lectures && (
-                          <div className="p-4 space-y-3">
-                            {chapter.lectures.map((lecture, j) => (
-                              <div key={lecture._id} className="flex items-center justify-between py-2">
-                                <div className="flex items-center space-x-3">
-                                  <Play className="w-4 h-4 text-slate-400" />
-                                  <span className="text-slate-300">Lecture {j + 1}: {lecture.title}</span>
+                        {expandedSection === i && chapter.chapterContent && (
+                          <div className="p-3 md:p-4 space-y-2">
+                            {chapter.chapterContent.map((lecture, j) => (
+                              <div key={lecture._id} className="flex items-center justify-between py-1 md:py-2">
+                                <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                  <Play className="w-3 h-3 md:w-4 md:h-4 text-slate-400 flex-shrink-0" />
+                                  <span className="text-slate-300 text-sm md:text-base truncate">{j + 1}. {lecture.title}</span>
                                 </div>
-                                <span className="text-slate-400 text-sm">{lecture.duration || 'N/A'}</span>
+                                {lecture.duration && (
+                                  <span className="text-slate-400 text-xs md:text-sm flex-shrink-0 ml-2">{lecture.duration}</span>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -404,19 +415,19 @@ const CourseDetails = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-slate-400">
-                      <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No curriculum available for this course yet.</p>
+                    <div className="text-center py-6 md:py-8 text-slate-400">
+                      <BookOpen className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm md:text-base">No curriculum available</p>
                     </div>
                   )}
                 </div>
               )}
 
               {activeTab === 'instructor' && (
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-semibold text-white mb-6">Your Instructor</h3>
-                  <div className="flex items-start space-x-6">
-                    <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex-shrink-0 overflow-hidden">
+                <div className="space-y-4">
+                  <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">Instructor</h3>
+                  <div className="flex items-start space-x-3 md:space-x-4">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex-shrink-0 overflow-hidden">
                       {course.educator?.profileImage ? (
                         <img
                           src={course.educator.profileImage}
@@ -427,15 +438,15 @@ const CourseDetails = () => {
                         <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600" />
                       )}
                     </div>
-                    <div>
-                      <h4 className="text-xl font-semibold text-white mb-2">
-                        {course.educator?.name || 'Instructor'}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-base md:text-lg font-semibold text-white mb-1">
+                        {course.educator?.name || 'Course Instructor'}
                       </h4>
-                      <p className="text-blue-400 mb-4">
-                        {course.educator?.title || 'Course Educator'}
+                      <p className="text-blue-400 mb-2 text-sm md:text-base">
+                        {course.educator?.title || 'Educator'}
                       </p>
-                      <p className="text-slate-300 leading-relaxed">
-                        {course.educator?.bio || 'Experienced educator passionate about sharing knowledge and helping students achieve their goals.'}
+                      <p className="text-slate-300 text-sm md:text-base leading-relaxed line-clamp-3">
+                        {course.educator?.bio || 'Experienced instructor dedicated to providing quality education.'}
                       </p>
                     </div>
                   </div>
@@ -443,159 +454,212 @@ const CourseDetails = () => {
               )}
 
               {activeTab === 'reviews' && (
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-semibold text-white mb-6">Student Reviews</h3>
-                  <div className="space-y-6">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="border-b border-slate-700 pb-6">
-                        <div className="flex items-start space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex-shrink-0"></div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <span className="text-white font-medium">Student Name</span>
-                              <div className="flex text-yellow-400">
-                                {[...Array(5)].map((_, j) => (
-                                  <Star key={j} className="w-4 h-4 fill-current" />
-                                ))}
+                <div className="space-y-4">
+                  <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">Student Reviews</h3>
+                  {course.reviews && course.reviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {course.reviews.map((review, i) => (
+                        <div key={i} className="border-b border-slate-700 pb-4">
+                          <div className="flex items-start space-x-3">
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex-shrink-0"></div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
+                                <span className="text-white font-medium text-sm md:text-base">{review.studentName}</span>
+                                <div className="flex text-yellow-400">
+                                  {[...Array(5)].map((_, j) => (
+                                    <Star key={j} className={`w-3 h-3 md:w-4 md:h-4 ${j < review.rating ? 'fill-current' : ''}`} />
+                                  ))}
+                                </div>
                               </div>
+                              <p className="text-slate-300 text-sm md:text-base">
+                                {review.comment}
+                              </p>
                             </div>
-                            <p className="text-slate-300">
-                              Review content will be loaded from your server.
-                            </p>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 md:py-8 text-slate-400">
+                      <Star className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-3 opacity-50" />
+                      <p className="text-sm md:text-base">No reviews yet</p>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 order-1 lg:order-2">
             <motion.div
               variants={fadeInUp}
               initial="initial"
               animate="animate"
               transition={{ delay: 0.4 }}
-              className="sticky top-24"
+              className="lg:sticky lg:top-24 order-1 lg:order-2"
             >
-              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
-                {/* Price */}
-                <div className="mb-6">
-                  <div className="flex items-baseline space-x-3 mb-2">
-                    <span className="text-3xl font-bold text-white">₹{course.price || '0'}</span>
-                    {course.originalPrice && course.originalPrice > course.price && (
-                      <>
-                        <span className="text-lg text-slate-400 line-through">₹{course.originalPrice}</span>
-                        <span className="px-2 py-1 bg-green-600/20 text-green-300 text-sm rounded">
-                          {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% off
-                        </span>
-                      </>
+              <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-lg md:rounded-2xl shadow-2xl overflow-hidden">
+                {/* Course Preview Card */}
+                <div className="relative">
+                  <div className="aspect-video bg-slate-900/50 overflow-hidden">
+                    {course.thumbnail ? (
+                      <img
+                        src={course.thumbnail}
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 flex items-center justify-center">
+                        <BookOpen className="w-10 h-10 md:w-12 md:h-12 text-white/70" />
+                      </div>
                     )}
                   </div>
+                  
+                  {/* Status Badge */}
                   {course.isPublished ? (
-                    <p className="text-green-400 text-sm">Available for enrollment!</p>
+                    <div className="absolute top-2 md:top-3 right-2 md:right-3">
+                      <span className="px-2 md:px-3 py-1 bg-green-600/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+                        Available
+                      </span>
+                    </div>
                   ) : (
-                    <p className="text-yellow-400 text-sm">Coming soon!</p>
+                    <div className="absolute top-2 md:top-3 right-2 md:right-3">
+                      <span className="px-2 md:px-3 py-1 bg-yellow-600/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+                        Coming Soon
+                      </span>
+                    </div>
                   )}
                 </div>
 
-                {/* Buy Button */}
-                <div className="mb-4">
-                  {!isLoggedIn ? (
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="w-full py-4 font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors text-lg"
-                    >
-                      Login to Enroll
-                    </button>
-                  ) : purchaseStatus.loading ? (
-                    <button
-                      disabled
-                      className="w-full py-4 font-semibold rounded-xl bg-slate-700 text-slate-400 cursor-not-allowed text-lg"
-                    >
-                      Loading...
-                    </button>
-                  ) : purchaseStatus.isEnrolled ? (
-                    <button
-                      onClick={handleExplore}
-                      className="w-full py-4 font-semibold rounded-xl bg-green-600 hover:bg-green-700 text-white transition-colors text-lg"
-                    >
-                      Explore Course
-                    </button>
-                  ) : course.isPublished ? (
-                    <StripeCheckoutButton
-                      course={course}
-                      buttonText="Enroll Now"
-                      className="w-full py-4 text-lg"
-                    />
-                  ) : (
-                    <button
-                      disabled
-                      className="w-full py-4 font-semibold rounded-xl bg-slate-700 text-slate-400 cursor-not-allowed text-lg"
-                    >
-                      Not Available
-                    </button>
-                  )}
+                {/* Purchase Section */}
+                <div className="p-4 md:p-6">
+                  {/* Price */}
+                  <div className="mb-4 md:mb-6">
+                    <div className="flex items-baseline space-x-2 md:space-x-3 mb-2">
+                      <span className="text-2xl md:text-3xl font-bold text-white">₹{course.price || '0'}</span>
+                      {course.originalPrice && course.originalPrice > course.price && (
+                        <>
+                          <span className="text-base md:text-lg text-slate-400 line-through">₹{course.originalPrice}</span>
+                          <span className="px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-semibold rounded-full">
+                            {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% OFF
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex text-yellow-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-3 h-3 md:w-4 md:h-4 ${i < Math.floor(course.rating || 4) ? 'fill-current' : ''}`} />
+                        ))}
+                      </div>
+                      <span className="text-slate-300 text-xs md:text-sm">({course.reviews?.length || 0} reviews)</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+                    {!isLoggedIn ? (
+                      <button
+                        onClick={() => navigate('/login')}
+                        className="w-full py-3 md:py-4 font-semibold rounded-lg md:rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-blue-500/25 text-sm md:text-base"
+                      >
+                        Login to Enroll
+                      </button>
+                    ) : purchaseStatus.loading ? (
+                      <button
+                        disabled
+                        className="w-full py-3 md:py-4 font-semibold rounded-lg md:rounded-xl bg-slate-700 text-slate-400 cursor-not-allowed text-sm md:text-base"
+                      >
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+                          <span>Checking...</span>
+                        </div>
+                      </button>
+                    ) : purchaseStatus.isEnrolled ? (
+                      <button
+                        onClick={handleExplore}
+                        className="w-full py-3 md:py-4 font-semibold rounded-lg md:rounded-xl bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-green-500/25 text-sm md:text-base"
+                      >
+                        <div className="flex items-center justify-center space-x-2">
+                          <Play className="w-4 h-4" />
+                          <span>Continue Learning</span>
+                        </div>
+                      </button>
+                    ) : course.isPublished ? (
+                      <div className="space-y-2">
+                        <StripeCheckoutButton
+                          course={course}
+                          buttonText="Enroll Now"
+                          className="w-full py-3 md:py-4 font-semibold rounded-lg md:rounded-xl bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-green-500/25 text-sm md:text-base"
+                        />
+                        
+                      </div>
+                    ) : (
+                      <button
+                        disabled
+                        className="w-full py-3 md:py-4 font-semibold rounded-lg md:rounded-xl bg-slate-700 text-slate-400 cursor-not-allowed text-sm md:text-base"
+                      >
+                        Coming Soon
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Course Stats */}
+                  <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6 p-3 md:p-4 bg-slate-900/50 rounded-lg md:rounded-xl">
+                    <div className="text-center">
+                      <div className="text-xl md:text-2xl font-bold text-white">{course.chapters?.length || 0}</div>
+                      <div className="text-slate-400 text-xs md:text-sm">Chapters</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl md:text-2xl font-bold text-white">{course.chapters?.reduce((total, chapter) => total + (chapter.chapterContent?.length || 0), 0) || 0}</div>
+                      <div className="text-slate-400 text-xs md:text-sm">Lectures</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl md:text-2xl font-bold text-white">{course.enrolledStudents?.length || 0}</div>
+                      <div className="text-slate-400 text-xs md:text-sm">Students</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl md:text-2xl font-bold text-white">{course.level || 'All'}</div>
+                      <div className="text-slate-400 text-xs md:text-sm">Level</div>
+                    </div>
+                  </div>
+
+                  {/* Course Features */}
+                  <div className="space-y-3">
+                    <h4 className="text-white font-semibold flex items-center space-x-2 text-sm md:text-base">
+                      <Award className="w-4 h-4 text-blue-400" />
+                      <span>What's included:</span>
+                    </h4>
+                    <div className="space-y-2 md:space-y-3">
+                      <div className="flex items-center space-x-3 text-slate-300">
+                        <div className="w-5 h-5 md:w-6 md:h-6 bg-blue-600/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Play className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-400" />
+                        </div>
+                        <span className="text-xs md:text-sm">{course.chapters?.reduce((total, chapter) => total + (chapter.chapterContent?.length || 0), 0) || 0} HD video lectures</span>
+                      </div>
+                      <div className="flex items-center space-x-3 text-slate-300">
+                        <div className="w-5 h-5 md:w-6 md:h-6 bg-green-600/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Download className="w-2.5 h-2.5 md:w-3 md:h-3 text-green-400" />
+                        </div>
+                        <span className="text-xs md:text-sm">Downloadable resources</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 text-slate-300">
+                        <div className="w-5 h-5 md:w-6 md:h-6 bg-orange-600/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Smartphone className="w-2.5 h-2.5 md:w-3 md:h-3 text-orange-400" />
+                        </div>
+                        <span className="text-xs md:text-sm">Mobile & desktop access</span>
+                      </div>
+                      <div className="flex items-center space-x-3 text-slate-300">
+                        <div className="w-5 h-5 md:w-6 md:h-6 bg-cyan-600/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Globe className="w-2.5 h-2.5 md:w-3 md:h-3 text-cyan-400" />
+                        </div>
+                        <span className="text-xs md:text-sm">Lifetime access</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Add to Cart */}
-                
-
-                {/* Course Info */}
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Duration</span>
-                    <span className="text-white">{course.duration || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Chapters</span>
-                    <span className="text-white">{course.chapters?.length || 0} chapters</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Level</span>
-                    <span className="text-white">{course.level || 'All Levels'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Category</span>
-                    <span className="text-white">{course.category || 'General'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Students</span>
-                    <span className="text-white">{course.enrolledStudents?.length || 0}</span>
-                  </div>
-                </div>
-
-                {/* Includes */}
-                <div className="space-y-3 mb-6">
-                  <h4 className="text-white font-semibold">This course includes:</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-3 text-slate-300">
-                      <Play className="w-4 h-4" />
-                      <span>{course.chapters?.reduce((total, chapter) => total + (chapter.chapterContent?.length || 0), 0) || 0} video lectures</span>
-                    </div>
-                    <div className="flex items-center space-x-3 text-slate-300">
-                      <Download className="w-4 h-4" />
-                      <span>Downloadable resources</span>
-                    </div>
-                    <div className="flex items-center space-x-3 text-slate-300">
-                      <Award className="w-4 h-4" />
-                      <span>Certificate of completion</span>
-                    </div>
-                    <div className="flex items-center space-x-3 text-slate-300">
-                      <Smartphone className="w-4 h-4" />
-                      <span>Access on mobile and desktop</span>
-                    </div>
-                    <div className="flex items-center space-x-3 text-slate-300">
-                      <Globe className="w-4 h-4" />
-                      <span>Full lifetime access</span>
-                    </div>
-                  </div>
-                </div>
-
-                
               </div>
             </motion.div>
           </div>
