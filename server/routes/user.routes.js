@@ -18,10 +18,10 @@ const userRouter = express.Router();
 userRouter.get('/profile', authenticate, getUserData); 
 
 // Get enrolled courses with progress
-userRouter.get('/enrolled-courses', authenticate, authorize('student'), getEnrolledCourses);
+userRouter.get('/enrolled-courses', authenticate, authorize('student', 'educator'), getEnrolledCourses);
 
 // Get user stats
-userRouter.get('/stats', authenticate, authorize('student'), getUserStats);
+userRouter.get('/stats', authenticate, authorize('student', 'educator'), getUserStats);
 
 // Course enrollment routes (students only)
 // userRouter.post('/enroll/:courseId', authenticate, authorize('student'), userEnrollCourse);

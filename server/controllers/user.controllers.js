@@ -109,7 +109,6 @@ export const userEnrollCourse = async (req, res) => {
   }
 };
 
-//user purshase course 
 export const userPurchaseCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -118,7 +117,7 @@ export const userPurchaseCourse = async (req, res) => {
 
     // console.log('Processing purchase for user:', userId, 'course:', courseId);
 
-    // Check if user exists and is a student
+    // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -127,10 +126,11 @@ export const userPurchaseCourse = async (req, res) => {
       });
     }
 
-    if (user.role !== 'student') {
+    // Allow both students and educators to purchase courses
+    if (user.role !== 'student' && user.role !== 'educator') {
       return res.status(403).json({
         success: false,
-        message: "Only students can purchase courses"
+        message: "Only students and educators can purchase courses"
       });
     }
 
@@ -215,7 +215,7 @@ export const userPurchaseCourse = async (req, res) => {
   }
 }
 
-// uodate UserCourseProgress
+// update UserCourseProgress
 export const updateUserCourseProgress = async (req, res) =>{
   try {
     const { courseId } = req.params;

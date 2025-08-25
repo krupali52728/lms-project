@@ -20,8 +20,10 @@ import {
 } from 'lucide-react';
 import { getEnrolledCourses, getUserStats } from '../../Api/userApi';
 import { enrollInCourse } from '../../Api/courseApi';
+import { useAuth } from '../../context/AuthContext';
 
 const StudentDashboard = () => {
+  const { user } = useAuth();
   const [viewMode, setViewMode] = useState('grid');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,6 +36,20 @@ const StudentDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Get dashboard title and description based on user role
+  const getDashboardContent = () => {
+    if (user?.role === 'educator') {
+      return {
+        title: 'My Learning Dashboard',
+        subtitle: 'Track your learning progress as an educator and student'
+      };
+    }
+    return {
+      title: 'My Learning Dashboard',
+      subtitle: 'Track your progress and continue your learning journey'
+    };
+  };
 
   // Fetch data on component mount
   useEffect(() => {
@@ -59,7 +75,7 @@ const StudentDashboard = () => {
         setStats(statsResponse.stats);
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('Error fetching dashboard data:', error.message);
       setError('Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
@@ -158,11 +174,19 @@ const StudentDashboard = () => {
           className="mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            My Learning Dashboard
+            {getDashboardContent().title}
           </h1>
           <p className="text-xl text-slate-300">
-            Track your progress and continue your learning journey
+            {getDashboardContent().subtitle}
           </p>
+          {user?.role === 'educator' && (
+            <div className="mt-4 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-lg inline-flex items-center space-x-2">
+              <Star className="w-4 h-4 text-purple-400" />
+              <span className="text-purple-300 text-sm font-medium">
+                Educator Learning Dashboard
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Stats Cards */}
@@ -284,7 +308,7 @@ const StudentDashboard = () => {
                     </h3>
                     <p className="text-slate-400 mb-6">
                       {enrolledCourses.length === 0 
-                        ? 'Ready to start your learning journey? Explore our course catalog and find the perfect course for you.'
+                        ? `Ready to start your learning journey${user?.role === 'educator' ? ' as an educator and learner' : ''}? Explore our course catalog and find the perfect course for you.`
                         : 'Try adjusting your search terms or filter criteria to find what you\'re looking for.'
                       }
                     </p>
