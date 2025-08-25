@@ -65,3 +65,25 @@ export const checkCoursePurchase = async (courseId) => {
     throw error;
   }
 };
+
+//  Get User's Enrolled Courses with Progress
+export const getEnrolledCourses = async () => {
+  try {
+    const res = await api.get("/user/enrolled-courses");
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching enrolled courses:", error);
+    throw error;
+  }
+};
+
+//  Get User Stats (enrolled, completed courses, study hours, etc.)
+export const getUserStats = async () => {
+  try {
+    const res = await api.get("/user/stats");
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    throw error;
+  }
+};

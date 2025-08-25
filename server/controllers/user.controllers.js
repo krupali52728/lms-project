@@ -428,3 +428,108 @@ export const checkCoursePurchase = async (req, res) => {
     });
   }
 }
+
+// Get user's enrolled courses with progress
+export const getEnrolledCourses = async (req, res) => {
+  try {
+    const { userId } = req.user;
+
+    // Get user with enrolled courses
+    const user = await User.findById(userId)
+      .populate({
+        path: 'enrolledCourse',
+        select: 'title thumbnail price educator category difficulty rating createdAt chapters',
+        populate: {
+          path: 'educator',
+          select: 'name'
+        }
+      });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Get progress for each enrolled course
+    const coursesWithProgress = await Promise.all(
+      user.enrolledCourse.map(async (course) => {
+        const progress = await userCourseProgress.findOne({
+          userId,
+          courseId: course._id
+        });
+
+        // Calculate total lessons (chapters)
+        const totalLessons = course.chapters ? course.chapters.length : 0;
+        const progressPercent = progress ? progress.progress : 0;
+        const completedLessons = Math.floor((progressPercent / 100) * totalLessons);
+
+        return {
+          id: course._id,
+          title: course.title,
+          instructor: course.educator ? course.educator.name : 'Unknown',
+          thumbnail: course.thumbnail || '/api/placeholder/300/200',
+          progress: progressPercent,
+          totalLessons,
+          completedLessons,
+          rating: course.rating || 4.5,
+          category: course.category || 'General',
+          difficulty: course.difficulty || 'Beginner',
+          lastAccessed: progress ? progress.updatedAt : course.createdAt,
+          isCompleted: progress ? progress.completed : false
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      courses: coursesWithProgress
+    });
+  } catch (error) {
+    console.error('Get enrolled courses error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Get user stats
+export const getUserStats = async (req, res) => {
+  try {
+    const { userId } = req.user;
+
+    const user = await User.findById(userId).populate('enrolledCourse');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Get all progress records for user
+    const progressRecords = await userCourseProgress.find({ userId });
+    
+    // Calculate stats
+    const totalEnrolled = user.enrolledCourse.length;
+    const completedCourses = progressRecords.filter(p => p.completed).length;
+    
+ 
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        enrolledCourses: totalEnrolled,
+        completedCourses,
+        
+      }
+    });
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

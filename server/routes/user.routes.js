@@ -5,7 +5,9 @@ import {
   updateUserCourseProgress, 
   getUserCourseProgress, 
   userRating,
-  checkCoursePurchase
+  checkCoursePurchase,
+  getEnrolledCourses,
+  getUserStats
 } from "../controllers/user.controllers.js";
 import express from 'express';
 import { authenticate, authorize } from "../middleware/authMiddleaare.js";
@@ -14,6 +16,12 @@ const userRouter = express.Router();
 
 // User profile routes
 userRouter.get('/profile', authenticate, getUserData); 
+
+// Get enrolled courses with progress
+userRouter.get('/enrolled-courses', authenticate, authorize('student'), getEnrolledCourses);
+
+// Get user stats
+userRouter.get('/stats', authenticate, authorize('student'), getUserStats);
 
 // Course enrollment routes (students only)
 // userRouter.post('/enroll/:courseId', authenticate, authorize('student'), userEnrollCourse);
