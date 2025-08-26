@@ -1,5 +1,7 @@
 import { 
   getUserData, 
+  updateUserData,
+  uploadProfilePicture,
   userEnrollCourse, 
   userPurchaseCourse, 
   updateUserCourseProgress, 
@@ -11,11 +13,14 @@ import {
 } from "../controllers/user.controllers.js";
 import express from 'express';
 import { authenticate, authorize } from "../middleware/authMiddleaare.js";
+import { upload } from "../config/multer.js";
 
 const userRouter = express.Router();
 
 // User profile routes
 userRouter.get('/profile', authenticate, getUserData); 
+userRouter.put('/profile', authenticate, updateUserData);
+userRouter.post('/profile/upload-avatar', authenticate, upload.single('avatar'), uploadProfilePicture); 
 
 // Get enrolled courses with progress
 userRouter.get('/enrolled-courses', authenticate, authorize('student', 'educator'), getEnrolledCourses);

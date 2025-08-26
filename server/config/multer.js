@@ -70,4 +70,34 @@ export const uploadImageToCloudinary = async (fileBuffer, fileName) => {
   }
 };
 
+// Function to upload profile picture to Cloudinary
+export const uploadProfilePictureToCloudinary = async (fileBuffer, fileName) => {
+  try {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'lms-profile-pictures',
+          public_id: fileName,
+          quality: 'auto',
+          format: 'jpg',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+            { quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
+      ).end(fileBuffer);
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
 export { upload };

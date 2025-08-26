@@ -24,12 +24,30 @@ export const authenticate = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ 
         success: false, 
-        message: 'Invalid token' 
+        message: 'User not found' 
       });
     }
+    
+    // Check if token is about to expire (within 7 days)
+    const tokenExp = decoded.exp * 1000; // Convert to milliseconds
+    const now = Date.now();
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    
+    if (tokenExp - now < sevenDaysInMs) {
+      // Token is about to expire, set a header to indicate refresh needed
+      res.set('X-Token-Refresh-Required', 'true');
+    }
+    
     req.user = { userId: user._id, role: user.role };
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token expired',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
     return res.status(401).json({ 
       success: false, 
       message: 'Invalid token' 

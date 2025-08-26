@@ -33,6 +33,17 @@ export const logoutUser = async () => {
   }
 };
 
+//  Refresh Token
+export const refreshTokenApi = async () => {
+  try {
+    const res = await api.post("/auth/refresh-token");
+    return res.data;
+  } catch (error) {
+    console.error("Refresh token error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
 // educator routes
 export const getEducatorProfile = async () => {
   try {

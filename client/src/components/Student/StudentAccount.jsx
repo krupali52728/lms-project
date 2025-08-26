@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -12,15 +12,23 @@ import {
   X,
   Lock,
   Bell,
-  Globe
+  Globe,
+  Loader,
+  Upload
 } from 'lucide-react';
+import { getUserProfile, updateUserProfile, uploadProfilePicture } from '../../Api/userApi.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { toast } from 'react-hot-toast';
 
 const StudentAccount = () => {
+  const { updateUserProfile: updateAuthUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     phone: '',
     location: '',
@@ -28,6 +36,38 @@ const StudentAccount = () => {
     birthDate: '',
     avatar: null
   });
+  const [originalData, setOriginalData] = useState({});
+  const fileInputRef = useRef(null);
+
+  // Load user profile data on component mount
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await getUserProfile();
+      if (response.success && response.user) {
+        const userData = {
+          name: response.user.name || '',
+          email: response.user.email || '',
+          phone: response.user.phone || '',
+          location: response.user.location || '',
+          bio: response.user.bio || '',
+          birthDate: response.user.birthDate || '',
+          avatar: response.user.avatar || null
+        };
+        setProfileData(userData);
+        setOriginalData(userData);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      toast.error('Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -37,15 +77,101 @@ const StudentAccount = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Here you would typically save to your server
-    console.log('Saving profile data:', profileData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      // Prepare data to send to backend
+      const updateData = {
+        name: profileData.name,
+        phone: profileData.phone,
+        location: profileData.location,
+        bio: profileData.bio,
+        birthDate: profileData.birthDate
+      };
+
+      const response = await updateUserProfile(updateData);
+      
+      if (response.success) {
+        toast.success('Profile updated successfully!');
+        setOriginalData(profileData);
+        setIsEditing(false);
+        
+        // Update the profile data with the response from server
+        if (response.user) {
+          const updatedData = {
+            name: response.user.name || '',
+            email: response.user.email || '',
+            phone: response.user.phone || '',
+            location: response.user.location || '',
+            bio: response.user.bio || '',
+            birthDate: response.user.birthDate || '',
+            avatar: response.user.avatar || null
+          };
+          setProfileData(updatedData);
+          setOriginalData(updatedData);
+          
+          // Update the auth context so navbar reflects changes immediately
+          updateAuthUser({
+            name: response.user.name,
+            avatar: response.user.avatar
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
     // Reset to original data from server
+    setProfileData(originalData);
     setIsEditing(false);
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      const response = await uploadProfilePicture(file);
+      
+      if (response.success) {
+        toast.success('Profile picture updated successfully!');
+        setProfileData(prev => ({
+          ...prev,
+          avatar: response.avatar
+        }));
+        setOriginalData(prev => ({
+          ...prev,
+          avatar: response.avatar
+        }));
+        
+        // Update the auth context with only the avatar
+        updateAuthUser({ avatar: response.avatar });
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image. Please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const fadeInUp = {
@@ -53,6 +179,18 @@ const StudentAccount = () => {
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.6 }
   };
+
+  // Show loading state while fetching profile data
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-24 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-300 text-lg">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 pt-24">
@@ -96,10 +234,27 @@ const StudentAccount = () => {
                   )}
                 </div>
                 
-                {isEditing && (
-                  <button className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200">
-                    <Camera className="w-5 h-5 text-white" />
-                  </button>
+                {(isEditing || !isEditing) && (
+                  <>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+                    >
+                      {uploadingImage ? (
+                        <Loader className="w-5 h-5 text-white animate-spin" />
+                      ) : (
+                        <Camera className="w-5 h-5 text-white" />
+                      )}
+                    </button>
+                  </>
                 )}
               </div>
 
@@ -108,9 +263,7 @@ const StudentAccount = () => {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                   <div>
                     <h2 className="text-3xl font-bold text-white mb-2">
-                      {profileData.firstName || profileData.lastName 
-                        ? `${profileData.firstName} ${profileData.lastName}` 
-                        : 'Your Name'}
+                      {profileData.name || 'Your Name'}
                     </h2>
                     <p className="text-slate-300 text-lg">Student</p>
                   </div>
@@ -120,14 +273,20 @@ const StudentAccount = () => {
                       <>
                         <button
                           onClick={handleSave}
-                          className="px-6 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors duration-200"
+                          disabled={saving}
+                          className="px-6 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Save className="w-4 h-4 inline mr-2" />
-                          Save
+                          {saving ? (
+                            <Loader className="w-4 h-4 inline mr-2 animate-spin" />
+                          ) : (
+                            <Save className="w-4 h-4 inline mr-2" />
+                          )}
+                          {saving ? 'Saving...' : 'Save'}
                         </button>
                         <button
                           onClick={handleCancel}
-                          className="px-6 py-3 border border-slate-600 text-slate-300 font-medium rounded-xl hover:border-slate-500 hover:text-white transition-all duration-200"
+                          disabled={saving}
+                          className="px-6 py-3 border border-slate-600 text-slate-300 font-medium rounded-xl hover:border-slate-500 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <X className="w-4 h-4 inline mr-2" />
                           Cancel
@@ -199,44 +358,23 @@ const StudentAccount = () => {
                 <h3 className="text-2xl font-semibold text-white mb-6">Profile Information</h3>
                 
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* First Name */}
-                  <div className="space-y-2">
+                  {/* Full Name */}
+                  <div className="space-y-2 md:col-span-2">
                     <label className="block text-sm font-medium text-slate-300">
-                      First Name
+                      Full Name
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
-                        name="firstName"
-                        value={profileData.firstName}
+                        name="name"
+                        value={profileData.name}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        placeholder="Enter your first name"
+                        placeholder="Enter your full name"
                       />
                     ) : (
                       <div className="px-4 py-3 bg-slate-900/30 border border-slate-700 rounded-xl text-slate-300">
-                        {profileData.firstName || 'Not provided'}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Last Name */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-300">
-                      Last Name
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="lastName"
-                        value={profileData.lastName}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        placeholder="Enter your last name"
-                      />
-                    ) : (
-                      <div className="px-4 py-3 bg-slate-900/30 border border-slate-700 rounded-xl text-slate-300">
-                        {profileData.lastName || 'Not provided'}
+                        {profileData.name || 'Not provided'}
                       </div>
                     )}
                   </div>

@@ -36,6 +36,7 @@ const StudentLayout = () => {
 
   // Check if user has student role or is an educator (educators can access student features)
   if (!user?.role || (user.role !== 'student' && user.role !== 'educator')) {
+    console.log('StudentLayout: Access denied. User:', user);
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center pt-24">
         <div className="max-w-md mx-auto text-center bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8">

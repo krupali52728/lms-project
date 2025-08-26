@@ -11,6 +11,35 @@ export const getUserProfile = async () => {
   }
 };
 
+//  Update User Profile
+export const updateUserProfile = async (profileData) => {
+  try {
+    const res = await api.put("/user/profile", profileData);
+    return res.data;
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    throw error;
+  }
+};
+
+//  Upload Profile Picture
+export const uploadProfilePicture = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    const res = await api.post("/user/profile/upload-avatar", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    throw error;
+  }
+};
+
 //  Purchase a Course
 export const purchaseCourse = async (courseId) => {
   try {

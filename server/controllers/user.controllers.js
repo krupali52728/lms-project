@@ -2,6 +2,7 @@ import User from "../model/user.model.js";
 import Course from "../model/course.model.js";
 import userCourseProgress from "../model/courseProgress.model.js";
 import Purchase from "../model/purchase.model.js";
+import { uploadProfilePictureToCloudinary } from "../config/multer.js";
 
 // Get user profile data
 export const getUserData = async (req, res) => {
@@ -19,17 +20,172 @@ export const getUserData = async (req, res) => {
       });
     }
 
+    // Format the user data for the frontend
+    const userData = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar || null,
+      phone: user.phone || '',
+      location: user.location || '',
+      bio: user.bio || '',
+      birthDate: user.birthDate ? user.birthDate.toISOString().split('T')[0] : '', // Format as YYYY-MM-DD
+      enrolledCourse: user.enrolledCourse,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+
     res.status(200).json({ 
       success: true, 
-      user 
+      user: userData 
     });
   } catch (error) {
+    console.error('Get user data error:', error);
     res.status(500).json({ 
       success: false, 
       message: error.message 
     });
   }
 };
+export const updateUserData = async(req,res)=>{
+  try {
+    const { userId } = req.user;
+    const { 
+      name, 
+      phone, 
+      location, 
+      bio, 
+      birthDate,
+      avatar 
+    } = req.body;
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Prepare update object - only include fields that are provided
+    const updateData = {};
+    
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (location !== undefined) updateData.location = location;
+    if (bio !== undefined) updateData.bio = bio;
+    if (avatar !== undefined) updateData.avatar = avatar;
+    if (birthDate !== undefined) {
+      // Validate date format if provided
+      if (birthDate && !isNaN(new Date(birthDate).getTime())) {
+        updateData.birthDate = new Date(birthDate);
+      } else if (birthDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid birth date format"
+        });
+      }
+    }
+
+    // Update the user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { 
+        new: true, 
+        runValidators: true,
+        select: '-password' // Exclude password from response
+      }
+    ).populate('enrolledCourse', 'title thumbnail price educator');
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Update user data error:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: Object.values(error.errors).map(err => err.message)
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+// Upload profile picture
+export const uploadProfilePicture = async (req, res) => {
+  try {
+    const { userId } = req.user;
+
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded"
+      });
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Generate unique filename
+    const fileName = `profile_${userId}_${Date.now()}`;
+
+    try {
+      // Upload to Cloudinary
+      const uploadResult = await uploadProfilePictureToCloudinary(req.file.buffer, fileName);
+      
+      // Update user avatar URL
+      user.avatar = uploadResult.secure_url;
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Profile picture uploaded successfully",
+        avatar: uploadResult.secure_url,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          avatar: user.avatar
+        }
+      });
+
+    } catch (uploadError) {
+      console.error('Cloudinary upload error:', uploadError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to upload image to cloud storage"
+      });
+    }
+
+  } catch (error) {
+    console.error('Upload profile picture error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
 
 //user enrollCourse
 export const userEnrollCourse = async (req, res) => {

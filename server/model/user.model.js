@@ -19,8 +19,23 @@ const userSchema = new mongoose.Schema({
       enum: ["student", "educator"],
       default: "student",
     },
-     avatar: {
+    avatar: {
       type: String,
+    },
+    phone: {
+        type: String,
+        default: ""
+    },
+    location: {
+        type: String,
+        default: ""
+    },
+    bio: {
+        type: String,
+        default: ""
+    },
+    birthDate: {
+        type: Date
     },
     enrolledCourse: [{
       type: mongoose.Schema.Types.ObjectId,

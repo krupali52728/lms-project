@@ -25,12 +25,13 @@ export const register = async (req, res) => {
         role: user.role  
       }, 
       process.env.JWT_TOKEN, 
-      { expiresIn: "10d" }
+      { expiresIn: "30d" }
     );
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     });
     res
       .status(201)
@@ -66,12 +67,14 @@ export const login = async (req, res) => {
         id: user._id,
         role: user.role  
       }, 
-      process.env.JWT_TOKEN
+      process.env.JWT_TOKEN,
+      { expiresIn: "30d" }
     );
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     });
 
     res.status(200).json({
@@ -93,6 +96,7 @@ export const logout = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
+      path: "/", // Ensure path matches
     });
 
     res
@@ -100,6 +104,49 @@ export const logout = async (req, res) => {
       .json({ success: true, message: "User logged out successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies?.token || req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ success: false, message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN);
+    const userId = decoded.userId || decoded.id;
+    
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+
+    // Generate new token with extended expiration
+    const newToken = jwt.sign(
+      { 
+        id: user._id,
+        role: user.role  
+      }, 
+      process.env.JWT_TOKEN,
+      { expiresIn: "30d" }
+    );
+
+    res.cookie("token", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+      token: newToken
+    });
+  } catch (error) {
+    res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 };
 

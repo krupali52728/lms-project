@@ -16,17 +16,75 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check if user is logged in on mount
+  // Check if user is logged in on mount and set up token refresh
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      setIsLoggedIn(true);
-      // Fetch user profile data
-      fetchUserProfile();
+    const tokenExpiry = localStorage.getItem('tokenExpiry');
+    
+    if (token && tokenExpiry) {
+      const now = new Date().getTime();
+      const expiryTime = parseInt(tokenExpiry);
+      
+      // If token is still valid (with some buffer time), restore session
+      if (expiryTime > now + (24 * 60 * 60 * 1000)) { // 24 hours buffer
+        setIsLoggedIn(true);
+        fetchUserProfile();
+      } else {
+        // Token is expired, try to refresh it
+        refreshToken();
+      }
     } else {
       setLoading(false);
     }
-  }, []);
+
+    // Set up automatic token refresh every 24 hours
+    const refreshInterval = setInterval(() => {
+      if (isLoggedIn) {
+        refreshToken();
+      }
+    }, 24 * 60 * 60 * 1000); // 24 hours
+
+    return () => clearInterval(refreshInterval);
+  }, [isLoggedIn]);
+
+  const refreshToken = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/refresh-token', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.token) {
+        const expiryTime = new Date().getTime() + (30 * 24 * 60 * 60 * 1000); // 30 days
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('tokenExpiry', expiryTime.toString());
+        setIsLoggedIn(true);
+        if (!user) {
+          fetchUserProfile();
+        }
+      } else {
+        handleTokenExpiry();
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      handleTokenExpiry();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTokenExpiry = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('tokenExpiry');
+    setIsLoggedIn(false);
+    setUser(null);
+    setLoading(false);
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -36,25 +94,50 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      // If token is invalid, clear it
-      localStorage.removeItem('token');
-      setIsLoggedIn(false);
+      // If user profile fetch fails, the token might be invalid
+      handleTokenExpiry();
     } finally {
       setLoading(false);
     }
   };
 
+  const updateUserProfile = (updatedUser) => {
+    if (updatedUser && typeof updatedUser === 'object') {
+      setUser(prevUser => ({
+        ...prevUser,
+        ...updatedUser
+      }));
+    }
+  };
+
   const login = (token) => {
+    const expiryTime = new Date().getTime() + (30 * 24 * 60 * 60 * 1000); // 30 days
     localStorage.setItem('token', token);
+    localStorage.setItem('tokenExpiry', expiryTime.toString());
     setIsLoggedIn(true);
     // Fetch user profile after login
     fetchUserProfile();
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-    setIsLoggedIn(false);
+  const logout = async () => {
+    try {
+      // Call logout API to clear server-side cookie
+      await fetch('http://localhost:3000/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      // Clear client-side data regardless of API call result
+      localStorage.removeItem('token');
+      localStorage.removeItem('tokenExpiry');
+      setUser(null);
+      setIsLoggedIn(false);
+    }
   };
 
   const value = {
@@ -63,7 +146,9 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     loading,
-    fetchUserProfile
+    fetchUserProfile,
+    updateUserProfile,
+    refreshToken
   };
 
   return (
