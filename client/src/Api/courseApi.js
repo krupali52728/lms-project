@@ -77,3 +77,14 @@ export const getEducatorCourses = async() => {
         throw error.response?.data || { message: "Something went wrong" };
     }
 }
+
+// check if user has already purchased a course
+export const checkPurchaseStatus = async(courseId) => {
+    try {
+        const res = await api.get(`/course/${courseId}/purchase-status`);
+        return res.data;
+    } catch (error) {
+        console.log("Check purchase status error:", error.response?.data || error.message);
+        throw error.response?.data || { message: "Something went wrong" };
+    }
+}

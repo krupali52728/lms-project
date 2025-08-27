@@ -299,6 +299,11 @@ export const userPurchaseCourse = async (req, res) => {
       });
     }
 
+    // Check for data integrity - educator should exist
+    if (!course.educator) {
+      console.warn(`Data integrity issue: Course ${courseId} has no associated educator or educator doesn't exist`);
+    }
+
     if (!course.isPublished) {
       return res.status(400).json({
         success: false,
@@ -313,10 +318,26 @@ export const userPurchaseCourse = async (req, res) => {
     });
 
     if (existingPurchase || user.enrolledCourse.includes(courseId)) {
-      console.log('User already purchased this course');
-      return res.status(400).json({
-        success: false,
-        message: "Course already purchased"
+      console.log('User already purchased this course, but payment was processed - handling gracefully');
+      
+      // Since payment was already processed, return success with existing purchase info
+      return res.status(200).json({
+        success: true,
+        message: "Course was already purchased - you already have access to this course",
+        purchase: {
+          _id: existingPurchase?._id || 'existing',
+          course: {
+            _id: course._id,
+            title: course.title,
+            educator: course.educator ? course.educator.name : 'Unknown Educator',
+            originalPrice: course.price,
+            discount: course.discount || 0,
+            finalPrice: course.price - (course.price * (course.discount || 0) / 100)
+          },
+          paymentMethod: 'stripe',
+          purchaseDate: existingPurchase?.purchaseDate || new Date(),
+          alreadyPurchased: true
+        }
       });
     }
 
@@ -353,7 +374,7 @@ export const userPurchaseCourse = async (req, res) => {
         course: {
           _id: course._id,
           title: course.title,
-          educator: course.educator.name,
+          educator: course.educator ? course.educator.name : 'Unknown Educator',
           originalPrice: course.price,
           discount: course.discount || 0,
           finalPrice: finalPrice

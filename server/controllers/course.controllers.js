@@ -2,6 +2,7 @@ import Course from "../model/course.model.js";
 import Chapter from "../model/chapter.model.js";
 import Lecture from "../model/lecture.model.js";
 import User from "../model/user.model.js";
+import Purchase from "../model/purchase.model.js";
 
 
 //create course
@@ -212,6 +213,55 @@ export const togglePublishCourse = async (req, res) => {
       success: true, 
       message: `Course ${course.isPublished ? 'published' : 'unpublished'} successfully`,
       course 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Check if user has already purchased a course
+export const checkPurchaseStatus = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { userId } = req.user;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    // Check if already purchased/enrolled
+    const existingPurchase = await Purchase.findOne({
+      user: userId,
+      course: courseId
+    });
+
+    const isEnrolled = user.enrolledCourse.includes(courseId);
+    const hasPurchased = existingPurchase !== null;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        courseId,
+        userId,
+        hasPurchased,
+        isEnrolled,
+        canPurchase: !hasPurchased && !isEnrolled,
+        purchaseDate: existingPurchase?.purchaseDate || null
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

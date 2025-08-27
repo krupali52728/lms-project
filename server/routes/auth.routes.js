@@ -1,4 +1,4 @@
-import { login, logout, register, refreshToken, sendRegistrationOTP, verifyOTPAndRegister, resendOTP } from "../controllers/auth.controllers.js";
+import { login, logout, register, refreshToken, sendRegistrationOTP, verifyOTPAndRegister, resendOTP, forgotPassword, resetPassword } from "../controllers/auth.controllers.js";
 import { authenticate,authorize } from "../middleware/authMiddleaare.js";
 import express from 'express';
 
@@ -14,6 +14,10 @@ authRouter.post('/register', register);
 authRouter.post('/login',login);
 authRouter.post('/logout',logout);
 authRouter.post('/refresh-token', refreshToken);
+
+// Password reset routes
+authRouter.post('/forgot-password', forgotPassword);
+authRouter.post('/reset-password', resetPassword);
 
 // the educator route 
 authRouter.get('/educator/profile',authenticate,authorize('educator'));

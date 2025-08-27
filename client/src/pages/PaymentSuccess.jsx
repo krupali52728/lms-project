@@ -27,7 +27,13 @@ const PaymentSuccess = () => {
         
         if (response.success) {
           setStatus('success');
-          setMessage('Payment completed successfully! You now have access to the course.');
+          
+          // Check if this was an already purchased course
+          if (response.purchase?.alreadyPurchased) {
+            setMessage('You already have access to this course! The payment was processed, but you were already enrolled.');
+          } else {
+            setMessage('Payment completed successfully! You now have access to the course.');
+          }
           
           // Redirect to course learning page after 3 seconds
           setTimeout(() => {
@@ -44,7 +50,18 @@ const PaymentSuccess = () => {
       } catch (error) {
         console.error('Payment verification error:', error);
         setStatus('error');
-        setMessage('Failed to verify payment. Please contact support.');
+        
+        // Show specific error message if available
+        const errorMessage = error.details?.message || error.message || 'Failed to verify payment. Please contact support.';
+        const errorStatus = error.status;
+        
+        if (errorStatus === 401) {
+          setMessage('Authentication failed. Please log in and try again.');
+        } else if (errorStatus === 400) {
+          setMessage(`Payment verification failed: ${errorMessage}`);
+        } else {
+          setMessage(errorMessage);
+        }
       }
     };
 

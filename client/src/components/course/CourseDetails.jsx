@@ -431,7 +431,7 @@ const CourseDetails = () => {
                       {course.educator?.profileImage ? (
                         <img
                           src={course.educator.profileImage}
-                          alt={course.educator.name}
+                          alt={course.educator?.name || 'Educator'}
                           className="w-full h-full object-cover"
                         />
                       ) : (

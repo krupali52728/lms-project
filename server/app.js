@@ -13,7 +13,7 @@ import videoRouter from './routes/video.routes.js';
 import paymentRouter from './routes/payment.routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 dotenv.config();
 
@@ -21,7 +21,7 @@ dotenv.config();
 app.use(cors({
   origin: [
     'http://localhost:5173', // Local development
-    'https://advanced-lms.vercel.app' // Replace with your actual client URL
+    'https://advanced-lms.vercel.app' 
   ],
   credentials: true
 }));

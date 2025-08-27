@@ -6,6 +6,8 @@ import Navbar from './components/Student/Navbar.jsx';
 import Home from './pages/Home.jsx';
 import Login from './components/Student/Login.jsx';
 import Signup from './components/Student/Signup.jsx';
+import ForgotPassword from './components/Student/ForgotPassword.jsx';
+import ResetPassword from './components/Student/ResetPassword.jsx';
 import OTPVerification from './components/Student/OTPVerification.jsx';
 import Search from './components/Student/Search.jsx';
 import CourseDetails from './components/course/CourseDetails.jsx';
@@ -65,6 +67,8 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/verify-otp" element={<OTPVerification />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/course/:id" element={<CourseDetails />} />

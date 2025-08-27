@@ -171,29 +171,28 @@ const SignUp = () => {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-4">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-600/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-1/4 -left-32 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 -right-32 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="w-full max-w-lg relative z-10">
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <motion.div
           variants={fadeInUp}
           initial="initial"
           animate="animate"
-          className="text-center mb-8"
+          className="text-center mb-6"
         >
-          <div className="flex items-center justify-center mb-6">
-            <div className="p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl">
-              <BookOpen className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-center mb-4">
+            <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl">
+              <BookOpen className="w-6 h-6 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-3">Create Account</h1>
-          <p className="text-slate-300 text-lg">Join thousands of learners worldwide</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+          <p className="text-slate-300">Join thousands of learners worldwide</p>
         </motion.div>
 
         {/* Sign Up Form */}
@@ -202,19 +201,19 @@ const SignUp = () => {
           initial="initial"
           animate="animate"
           transition={{ delay: 0.2 }}
-          className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl"
+          className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-2xl"
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name Fields Row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {/* First Name */}
-              <div className="space-y-2">
-                <label htmlFor="firstName" className="block text-sm font-medium text-slate-300">
+              <div className="space-y-1">
+                <label htmlFor="firstName" className="block text-xs font-medium text-slate-300">
                   First Name
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className={`h-5 w-5 transition-colors duration-200 ${
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className={`h-4 w-4 transition-colors duration-200 ${
                       focusedField === 'firstName' ? 'text-blue-400' : 'text-slate-400'
                     }`} />
                   </div>
@@ -226,7 +225,7 @@ const SignUp = () => {
                     onChange={handleInputChange}
                     onFocus={() => setFocusedField('firstName')}
                     onBlur={() => setFocusedField('')}
-                    className={`w-full pl-12 pr-4 py-3 bg-slate-900/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                    className={`w-full pl-9 pr-3 py-2.5 bg-slate-900/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition-all duration-200 text-sm ${
                       errors.firstName 
                         ? 'border-red-500 focus:ring-red-500/20' 
                         : focusedField === 'firstName'
@@ -240,7 +239,7 @@ const SignUp = () => {
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-red-400 text-sm flex items-center mt-1"
+                    className="text-red-400 text-xs flex items-center mt-1"
                   >
                     <AlertCircle className="w-3 h-3 mr-1" />
                     {errors.firstName}
@@ -249,13 +248,13 @@ const SignUp = () => {
               </div>
 
               {/* Last Name */}
-              <div className="space-y-2">
-                <label htmlFor="lastName" className="block text-sm font-medium text-slate-300">
+              <div className="space-y-1">
+                <label htmlFor="lastName" className="block text-xs font-medium text-slate-300">
                   Last Name
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className={`h-5 w-5 transition-colors duration-200 ${
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className={`h-4 w-4 transition-colors duration-200 ${
                       focusedField === 'lastName' ? 'text-blue-400' : 'text-slate-400'
                     }`} />
                   </div>
@@ -267,7 +266,7 @@ const SignUp = () => {
                     onChange={handleInputChange}
                     onFocus={() => setFocusedField('lastName')}
                     onBlur={() => setFocusedField('')}
-                    className={`w-full pl-12 pr-4 py-3 bg-slate-900/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                    className={`w-full pl-9 pr-3 py-2.5 bg-slate-900/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition-all duration-200 text-sm ${
                       errors.lastName 
                         ? 'border-red-500 focus:ring-red-500/20' 
                         : focusedField === 'lastName'
@@ -281,7 +280,7 @@ const SignUp = () => {
                   <motion.p
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-red-400 text-sm flex items-center mt-1"
+                    className="text-red-400 text-xs flex items-center mt-1"
                   >
                     <AlertCircle className="w-3 h-3 mr-1" />
                     {errors.lastName}
@@ -291,13 +290,13 @@ const SignUp = () => {
             </div>
 
             {/* Email Field */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="email" className="block text-xs font-medium text-slate-300">
                 Email Address
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className={`h-5 w-5 transition-colors duration-200 ${
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className={`h-4 w-4 transition-colors duration-200 ${
                     focusedField === 'email' ? 'text-blue-400' : 'text-slate-400'
                   }`} />
                 </div>
@@ -309,7 +308,7 @@ const SignUp = () => {
                   onChange={handleInputChange}
                   onFocus={() => setFocusedField('email')}
                   onBlur={() => setFocusedField('')}
-                  className={`w-full pl-12 pr-4 py-4 bg-slate-900/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 text-lg ${
+                  className={`w-full pl-9 pr-3 py-2.5 bg-slate-900/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition-all duration-200 text-sm ${
                     errors.email 
                       ? 'border-red-500 focus:ring-red-500/20' 
                       : focusedField === 'email'
@@ -323,22 +322,22 @@ const SignUp = () => {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm flex items-center mt-2"
+                  className="text-red-400 text-xs flex items-center mt-1"
                 >
-                  <AlertCircle className="w-4 h-4 mr-2" />
+                  <AlertCircle className="w-3 h-3 mr-1" />
                   {errors.email}
                 </motion.p>
               )}
             </div>
 
             {/* Phone Field */}
-            <div className="space-y-2">
-              <label htmlFor="phone" className="block text-sm font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="phone" className="block text-xs font-medium text-slate-300">
                 Phone Number
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Phone className={`h-5 w-5 transition-colors duration-200 ${
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className={`h-4 w-4 transition-colors duration-200 ${
                     focusedField === 'phone' ? 'text-blue-400' : 'text-slate-400'
                   }`} />
                 </div>
@@ -350,7 +349,7 @@ const SignUp = () => {
                   onChange={handleInputChange}
                   onFocus={() => setFocusedField('phone')}
                   onBlur={() => setFocusedField('')}
-                  className={`w-full pl-12 pr-4 py-4 bg-slate-900/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 text-lg ${
+                  className={`w-full pl-9 pr-3 py-2.5 bg-slate-900/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition-all duration-200 text-sm ${
                     errors.phone 
                       ? 'border-red-500 focus:ring-red-500/20' 
                       : focusedField === 'phone'
@@ -364,22 +363,22 @@ const SignUp = () => {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm flex items-center mt-2"
+                  className="text-red-400 text-xs flex items-center mt-1"
                 >
-                  <AlertCircle className="w-4 h-4 mr-2" />
+                  <AlertCircle className="w-3 h-3 mr-1" />
                   {errors.phone}
                 </motion.p>
               )}
             </div>
 
             {/* Password Field */}
-            <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="password" className="block text-xs font-medium text-slate-300">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className={`h-5 w-5 transition-colors duration-200 ${
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className={`h-4 w-4 transition-colors duration-200 ${
                     focusedField === 'password' ? 'text-blue-400' : 'text-slate-400'
                   }`} />
                 </div>
@@ -391,7 +390,7 @@ const SignUp = () => {
                   onChange={handleInputChange}
                   onFocus={() => setFocusedField('password')}
                   onBlur={() => setFocusedField('')}
-                  className={`w-full pl-12 pr-12 py-4 bg-slate-900/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 text-lg ${
+                  className={`w-full pl-9 pr-9 py-2.5 bg-slate-900/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition-all duration-200 text-sm ${
                     errors.password 
                       ? 'border-red-500 focus:ring-red-500/20' 
                       : focusedField === 'password'
@@ -403,17 +402,17 @@ const SignUp = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white transition-colors duration-200"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors duration-200"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               
               {/* Password Strength Indicator */}
               {formData.password && (
-                <div className="mt-2">
+                <div className="mt-1">
                   <div className="flex items-center space-x-2">
-                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
                       <div 
                         className={`h-full transition-all duration-300 ${
                           passwordStrength <= 25 ? 'bg-red-500' :
@@ -440,22 +439,22 @@ const SignUp = () => {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm flex items-center mt-2"
+                  className="text-red-400 text-xs flex items-center mt-1"
                 >
-                  <AlertCircle className="w-4 h-4 mr-2" />
+                  <AlertCircle className="w-3 h-3 mr-1" />
                   {errors.password}
                 </motion.p>
               )}
             </div>
 
             {/* Confirm Password Field */}
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="confirmPassword" className="block text-xs font-medium text-slate-300">
                 Confirm Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className={`h-5 w-5 transition-colors duration-200 ${
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className={`h-4 w-4 transition-colors duration-200 ${
                     focusedField === 'confirmPassword' ? 'text-blue-400' : 'text-slate-400'
                   }`} />
                 </div>
@@ -467,7 +466,7 @@ const SignUp = () => {
                   onChange={handleInputChange}
                   onFocus={() => setFocusedField('confirmPassword')}
                   onBlur={() => setFocusedField('')}
-                  className={`w-full pl-12 pr-12 py-4 bg-slate-900/50 border rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 text-lg ${
+                  className={`w-full pl-9 pr-9 py-2.5 bg-slate-900/50 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-1 transition-all duration-200 text-sm ${
                     errors.confirmPassword 
                       ? 'border-red-500 focus:ring-red-500/20' 
                       : focusedField === 'confirmPassword'
@@ -479,13 +478,13 @@ const SignUp = () => {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white transition-colors duration-200"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition-colors duration-200"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
                 {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                  <div className="absolute inset-y-0 right-12 flex items-center pr-2">
-                    <CheckCircle className="h-5 w-5 text-green-400" />
+                  <div className="absolute inset-y-0 right-9 flex items-center pr-2">
+                    <CheckCircle className="h-4 w-4 text-green-400" />
                   </div>
                 )}
               </div>
@@ -493,16 +492,16 @@ const SignUp = () => {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm flex items-center mt-2"
+                  className="text-red-400 text-xs flex items-center mt-1"
                 >
-                  <AlertCircle className="w-4 h-4 mr-2" />
+                  <AlertCircle className="w-3 h-3 mr-1" />
                   {errors.confirmPassword}
                 </motion.p>
               )}
             </div>
 
             {/* Terms & Conditions */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex items-start">
                 <input
                   id="agreeToTerms"
@@ -510,9 +509,9 @@ const SignUp = () => {
                   type="checkbox"
                   checked={formData.agreeToTerms}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-600 bg-slate-800 rounded mt-1"
+                  className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-slate-600 bg-slate-800 rounded mt-0.5"
                 />
-                <label htmlFor="agreeToTerms" className="ml-3 text-sm text-slate-300 leading-relaxed">
+                <label htmlFor="agreeToTerms" className="ml-2 text-xs text-slate-300 leading-relaxed">
                   I agree to the{' '}
                   <a href="#" className="text-blue-400 hover:text-blue-300 transition-colors duration-200">
                     Terms of Service
@@ -527,9 +526,9 @@ const SignUp = () => {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-red-400 text-sm flex items-center"
+                  className="text-red-400 text-xs flex items-center"
                 >
-                  <AlertCircle className="w-4 h-4 mr-2" />
+                  <AlertCircle className="w-3 h-3 mr-1" />
                   {errors.agreeToTerms}
                 </motion.p>
               )}
@@ -541,7 +540,7 @@ const SignUp = () => {
               disabled={isLoading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center space-x-3 ${
+              className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
                 isLoading
                   ? 'bg-slate-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105'
@@ -549,13 +548,13 @@ const SignUp = () => {
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Sending Verification Code...</span>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Sending Code...</span>
                 </>
               ) : (
                 <>
                   <span>Send Verification Code</span>
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </motion.button>
@@ -565,50 +564,19 @@ const SignUp = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
+                className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
               >
-                <div className="flex items-center text-red-400">
-                  <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+                <div className="flex items-center text-red-400 text-sm">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>{errors.submit}</span>
                 </div>
               </motion.div>
             )}
           </form>
 
-          {/* Social Sign Up Options */}
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-700"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-slate-800/50 text-slate-400">Or sign up with</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full inline-flex justify-center py-3 px-4 border border-slate-600 rounded-xl bg-slate-900/50 text-slate-300 hover:bg-slate-700/50 hover:border-slate-500 transition-all duration-200">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span className="ml-2">Google</span>
-              </button>
-
-              <button className="w-full inline-flex justify-center py-3 px-4 border border-slate-600 rounded-xl bg-slate-900/50 text-slate-300 hover:bg-slate-700/50 hover:border-slate-500 transition-all duration-200">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                <span className="ml-2">Facebook</span>
-              </button>
-            </div>
-          </div>
-
           {/* Sign In Link */}
-          <div className="mt-8 text-center">
-            <p className="text-slate-400">
+          <div className="mt-6 text-center">
+            <p className="text-slate-400 text-sm">
               Already have an account?{' '}
               <a href="#" className="font-medium text-blue-400 hover:text-blue-300 transition-colors duration-200">
                 Sign in here

@@ -79,6 +79,28 @@ export const refreshTokenApi = async () => {
   }
 };
 
+// Forgot Password - Request reset
+export const forgotPassword = async (email) => {
+  try {
+    const res = await api.post("/auth/forgot-password", { email });
+    return res.data;
+  } catch (error) {
+    console.error("Forgot password error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
+// Reset Password - Set new password with token
+export const resetPassword = async (resetData) => {
+  try {
+    const res = await api.post("/auth/reset-password", resetData);
+    return res.data;
+  } catch (error) {
+    console.error("Reset password error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
 // educator routes
 export const getEducatorProfile = async () => {
   try {

@@ -63,10 +63,39 @@ paymentRouter.post('/verify-session', authenticate, async (req, res) => {
 
     console.log('Verifying payment session:', sessionId, 'for user:', userId);
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    // Validate input
+    if (!sessionId) {
+      console.log('Session ID missing in request body');
+      return res.status(400).json({
+        success: false,
+        message: 'Session ID is required'
+      });
+    }
+
+    // Retrieve Stripe session
+    let session;
+    try {
+      session = await stripe.checkout.sessions.retrieve(sessionId);
+      console.log('Stripe session retrieved. Payment status:', session.payment_status);
+      console.log('Session metadata:', session.metadata);
+    } catch (stripeError) {
+      console.log('Stripe session retrieval error:', stripeError.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid session ID or session not found'
+      });
+    }
     
     if (session.payment_status === 'paid') {
       const courseId = session.metadata.courseId;
+      
+      if (!courseId) {
+        console.log('Course ID missing in session metadata');
+        return res.status(400).json({
+          success: false,
+          message: 'Course ID not found in payment session'
+        });
+      }
       
       console.log('Payment verified successfully, processing purchase for course:', courseId);
       
@@ -94,33 +123,45 @@ paymentRouter.post('/verify-session', authenticate, async (req, res) => {
       };
       
       // Call the purchase controller
-      await userPurchaseCourse(purchaseReq, mockRes);
-      
-      if (purchaseStatus === 200 && purchaseResult?.success) {
-        res.status(200).json({
-          success: true,
-          session: session,
-          courseId: courseId,
-          purchase: purchaseResult.purchase,
-          message: 'Payment verified and purchase completed successfully'
-        });
-      } else {
-        console.log('Purchase processing failed:', purchaseResult);
-        res.status(400).json({
+      try {
+        await userPurchaseCourse(purchaseReq, mockRes);
+        
+        if (purchaseStatus === 200 && purchaseResult?.success) {
+          res.status(200).json({
+            success: true,
+            session: session,
+            courseId: courseId,
+            purchase: purchaseResult.purchase,
+            message: 'Payment verified and purchase completed successfully'
+          });
+        } else {
+          console.log('Purchase processing failed. Status:', purchaseStatus, 'Result:', purchaseResult);
+          res.status(400).json({
+            success: false,
+            message: purchaseResult?.message || 'Failed to complete purchase',
+          });
+        }
+      } catch (purchaseError) {
+        console.log('Purchase controller error:', purchaseError.message);
+        res.status(500).json({
           success: false,
-          message: purchaseResult?.message || 'Failed to complete purchase',
+          message: 'Internal error during purchase processing'
         });
       }
     } else {
+      console.log('Payment not completed. Status:', session.payment_status);
       res.status(400).json({
         success: false,
-        message: 'Payment not completed',
+        message: `Payment not completed. Status: ${session.payment_status}`,
+        paymentStatus: session.payment_status
       });
     }
   } catch (error) {
     console.log('Verify Session Error:', error.message);
+    console.log('Error stack:', error.stack);
     res.status(500).json({ 
       success: false,
+      message: 'Internal server error during payment verification',
       error: error.message 
     });
   }
