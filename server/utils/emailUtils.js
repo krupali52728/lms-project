@@ -286,6 +286,47 @@ export const sendWelcomeEmail = async (email, name) => {
 };
 
 /**
+ * Send password reset OTP email
+ * @param {string} email - Recipient email
+ * @param {string} name - Recipient name
+ * @param {string} resetOTP - 6-digit reset OTP
+ * @returns {Promise<Object>} Result object with success status
+ */
+export const sendPasswordResetOTP = async (email, name, resetOTP) => {
+  const content = `
+    <div class="greeting">Hello ${name},</div>
+    <div class="message">
+      We received a request to reset your password for your Advanced LMS Platform account.
+      <br><br>
+      If you requested this password reset, please use the verification code below:
+    </div>
+    
+    <div class="otp-container">
+      <div class="otp-label">Password Reset Code</div>
+      <div class="otp-code">${resetOTP}</div>
+    </div>
+    
+    <div class="warning">
+      ⏰ <strong>Security Notice:</strong> This password reset code will expire in 10 minutes.
+      If you didn't request a password reset, please ignore this email and your password will remain unchanged.
+    </div>
+    
+    <div class="message">
+      For your security, never share this code with anyone. Our support team will never ask for this code.
+    </div>
+  `;
+
+  const mailOptions = {
+    from: `"${EMAIL_CONFIG.SENDER_NAME}" <${EMAIL_CONFIG.SENDER_EMAIL}>`,
+    to: email,
+    subject: "🔐 Password Reset Code - Advanced LMS Platform",
+    html: createEmailTemplate("Password Reset", content),
+  };
+
+  return await sendEmail(mailOptions, "password reset OTP", email);
+};
+
+/**
  * Send password reset email
  * @param {string} email - Recipient email
  * @param {string} name - Recipient name

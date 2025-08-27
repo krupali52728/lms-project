@@ -44,7 +44,14 @@ const ForgotPassword = () => {
       const response = await forgotPassword(email);
       
       if (response.success) {
-        setIsSuccess(true);
+        // Navigate to OTP verification with user data
+        navigate('/forgot-password/verify-otp', {
+          state: {
+            userId: response.userId,
+            email: email,
+            name: 'User' // We don't have name from forgot password
+          }
+        });
       } else {
         setError(response.message || 'Failed to send reset email. Please try again.');
       }

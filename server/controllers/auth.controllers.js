@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import User from "../model/user.model.js";
-import { generateOTP, sendOTPEmail, generateResetToken, sendPasswordResetEmail } from "../utils/emailUtils.js";
+import { generateOTP, sendOTPEmail, generateResetToken, sendPasswordResetEmail, sendPasswordResetOTP } from "../utils/emailUtils.js";
 
 // Step 1: Send OTP for registration
 export const sendRegistrationOTP = async (req, res) => {
@@ -379,27 +379,71 @@ export const forgotPassword = async (req, res) => {
       return res.json({ success: false, message: "Please verify your email first before resetting password" });
     }
 
-    // Generate reset token
-    const resetToken = generateResetToken();
-    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // Generate 6-digit OTP for password reset
+    const resetOTP = generateOTP();
+    const resetTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Save reset token to user
-    user.resetToken = resetToken;
+    // Save reset OTP to user (reusing resetToken field for OTP)
+    user.resetToken = resetOTP;
     user.resetTokenExpiry = resetTokenExpiry;
     await user.save();
 
-    // Send password reset email
-    const emailResult = await sendPasswordResetEmail(user.email, user.name, resetToken);
+    // Send password reset OTP email
+    const emailResult = await sendPasswordResetOTP(user.email, user.name, resetOTP);
     if (!emailResult.success) {
       return res.status(500).json({
         success: false,
-        message: "Failed to send password reset email"
+        message: "Failed to send password reset OTP"
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Password reset link has been sent to your email"
+      message: "Password reset OTP has been sent to your email",
+      userId: user._id
+    });
+
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+// Verify Reset OTP
+export const verifyResetOTP = async (req, res) => {
+  const { userId, otp } = req.body;
+
+  if (!userId || !otp) {
+    return res.json({ success: false, message: "User ID and OTP are required" });
+  }
+
+  try {
+    // Find user with valid reset OTP
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    // Check OTP expiry
+    if (user.resetTokenExpiry < new Date()) {
+      return res.json({ success: false, message: "OTP has expired" });
+    }
+
+    // Verify OTP
+    if (user.resetToken !== otp) {
+      return res.json({ success: false, message: "Invalid OTP" });
+    }
+
+    // OTP is valid, generate a temporary token for password reset
+    const tempResetToken = generateResetToken();
+    user.resetToken = tempResetToken;
+    user.resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes to reset password
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+      resetToken: tempResetToken
     });
 
   } catch (error) {

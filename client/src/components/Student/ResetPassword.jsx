@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Lock,
   Eye,
@@ -26,14 +26,14 @@ const ResetPassword = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const location = useLocation();
+  const { resetToken, email } = location.state || {};
 
   useEffect(() => {
-    if (!token) {
+    if (!resetToken) {
       navigate('/forgot-password');
     }
-  }, [token, navigate]);
+  }, [resetToken, navigate]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -79,7 +79,7 @@ const ResetPassword = () => {
     
     try {
       const response = await resetPassword({
-        token,
+        token: resetToken,
         password: formData.password
       });
       

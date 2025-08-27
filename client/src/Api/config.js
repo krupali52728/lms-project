@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.BACKEND_URL || "http://localhost:3000/api", // Backend base URL
+  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api", // Backend base URL
   withCredentials: true, // useful for cookies/JWT
 });
 
@@ -40,7 +40,7 @@ api.interceptors.response.use(
       try {
         // Try to refresh the token
         const refreshResponse = await axios.post(
-          `${import.meta.env.BACKEND_URL || "http://localhost:3000/api"}/auth/refresh-token`,
+          `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"}/auth/refresh-token`,
           {},
           {
             withCredentials: true,
@@ -83,7 +83,7 @@ const refreshTokenInBackground = async () => {
     if (!token) return;
 
     const response = await axios.post(
-      `${import.meta.env.BACKEND_URL || "http://localhost:3000/api"}/auth/refresh-token`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api"}/auth/refresh-token`,
       {},
       {
         withCredentials: true,

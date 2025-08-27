@@ -90,6 +90,17 @@ export const forgotPassword = async (email) => {
   }
 };
 
+// Verify Reset OTP
+export const verifyResetOTP = async (otpData) => {
+  try {
+    const res = await api.post("/auth/verify-reset-otp", otpData);
+    return res.data;
+  } catch (error) {
+    console.error("Verify reset OTP error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
 // Reset Password - Set new password with token
 export const resetPassword = async (resetData) => {
   try {

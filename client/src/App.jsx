@@ -7,6 +7,7 @@ import Home from './pages/Home.jsx';
 import Login from './components/Student/Login.jsx';
 import Signup from './components/Student/Signup.jsx';
 import ForgotPassword from './components/Student/ForgotPassword.jsx';
+import ForgotPasswordOTP from './components/Student/ForgotPasswordOTP.jsx';
 import ResetPassword from './components/Student/ResetPassword.jsx';
 import OTPVerification from './components/Student/OTPVerification.jsx';
 import Search from './components/Student/Search.jsx';
@@ -68,6 +69,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/forgot-password/verify-otp" element={<ForgotPasswordOTP />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/verify-otp" element={<OTPVerification />} />
                   <Route path="/search" element={<Search />} />
