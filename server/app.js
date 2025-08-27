@@ -21,7 +21,7 @@ dotenv.config();
 app.use(cors({
   origin: [
     'http://localhost:5173', // Local development
-    'https://advanced-lms.vercel.app/' // Replace with your actual client URL
+    'https://advanced-lms.vercel.app' // Replace with your actual client URL
   ],
   credentials: true
 }));
