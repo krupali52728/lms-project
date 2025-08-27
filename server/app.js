@@ -19,7 +19,10 @@ dotenv.config();
 
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite default port
+  origin: [
+    'http://localhost:5173', // Local development
+    'https://advanced-lms.vercel.app/' // Replace with your actual client URL
+  ],
   credentials: true
 }));
 
