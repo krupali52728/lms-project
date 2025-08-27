@@ -6,6 +6,7 @@ import Navbar from './components/Student/Navbar.jsx';
 import Home from './pages/Home.jsx';
 import Login from './components/Student/Login.jsx';
 import Signup from './components/Student/Signup.jsx';
+import OTPVerification from './components/Student/OTPVerification.jsx';
 import Search from './components/Student/Search.jsx';
 import CourseDetails from './components/course/CourseDetails.jsx';
 import CourseLearn from './components/course/CourseLearn.jsx';
@@ -64,6 +65,7 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
+                  <Route path="/verify-otp" element={<OTPVerification />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/course/:id" element={<CourseDetails />} />
                   <Route path="/course" element={<Search />} /> {/* Redirect to search if no course ID */}

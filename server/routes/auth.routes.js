@@ -1,9 +1,15 @@
-import { login, logout, register, refreshToken } from "../controllers/auth.controllers.js";
+import { login, logout, register, refreshToken, sendRegistrationOTP, verifyOTPAndRegister, resendOTP } from "../controllers/auth.controllers.js";
 import { authenticate,authorize } from "../middleware/authMiddleaare.js";
 import express from 'express';
 
 const authRouter = express.Router();
 
+// OTP-based registration routes
+authRouter.post('/send-registration-otp', sendRegistrationOTP);
+authRouter.post('/verify-otp', verifyOTPAndRegister);
+authRouter.post('/resend-otp', resendOTP);
+
+// Original routes (keeping for backward compatibility)
 authRouter.post('/register', register);
 authRouter.post('/login',login);
 authRouter.post('/logout',logout);

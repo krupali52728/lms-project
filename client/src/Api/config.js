@@ -20,7 +20,16 @@ api.interceptors.request.use(
 
 // Response interceptor to handle token expiry
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Check if server indicates token refresh is needed
+    if (response.headers['x-token-refresh-required']) {
+      // Trigger token refresh in the background
+      setTimeout(() => {
+        refreshTokenInBackground();
+      }, 100);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -53,11 +62,12 @@ api.interceptors.response.use(
           return api(originalRequest);
         }
       } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
         // Refresh failed, clear tokens and redirect to login
         localStorage.removeItem("token");
         localStorage.removeItem("tokenExpiry");
-        // You can dispatch a logout action here or redirect to login
-        window.location.href = "/login";
+        // Dispatch a custom event to notify the app about logout
+        window.dispatchEvent(new CustomEvent('forceLogout'));
         return Promise.reject(refreshError);
       }
     }
@@ -65,5 +75,35 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Background token refresh function
+const refreshTokenInBackground = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const response = await axios.post(
+      "http://localhost:3000/api/auth/refresh-token",
+      {},
+      {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.data.success && response.data.token) {
+      const newToken = response.data.token;
+      const expiryTime = new Date().getTime() + (30 * 24 * 60 * 60 * 1000);
+      
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("tokenExpiry", expiryTime.toString());
+    }
+  } catch (error) {
+    console.error("Background token refresh failed:", error);
+    // Don't force logout on background refresh failure
+  }
+};
 
 export default api;

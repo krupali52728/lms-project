@@ -16,6 +16,18 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const handleTokenExpiry = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('tokenExpiry');
+    setIsLoggedIn(false);
+    setUser(null);
+    setLoading(false);
+  };
+
+  const handleForceLogout = () => {
+    handleTokenExpiry();
+  };
+
   // Check if user is logged in on mount and set up token refresh
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -25,8 +37,8 @@ export const AuthProvider = ({ children }) => {
       const now = new Date().getTime();
       const expiryTime = parseInt(tokenExpiry);
       
-      // If token is still valid (with some buffer time), restore session
-      if (expiryTime > now + (24 * 60 * 60 * 1000)) { // 24 hours buffer
+      // If token is still valid (check if not expired), restore session
+      if (expiryTime > now) { // Simply check if token hasn't expired
         setIsLoggedIn(true);
         fetchUserProfile();
       } else {
@@ -37,15 +49,37 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
 
-    // Set up automatic token refresh every 24 hours
+    // Set up automatic token refresh every 7 days (instead of 24 hours)
     const refreshInterval = setInterval(() => {
       if (isLoggedIn) {
-        refreshToken();
+        const tokenExpiry = localStorage.getItem('tokenExpiry');
+        if (tokenExpiry) {
+          const now = new Date().getTime();
+          const expiryTime = parseInt(tokenExpiry);
+          
+          // Refresh token if it expires within 7 days
+          if (expiryTime - now < (7 * 24 * 60 * 60 * 1000)) {
+            refreshToken();
+          }
+        }
       }
-    }, 24 * 60 * 60 * 1000); // 24 hours
+    }, 6 * 60 * 60 * 1000); // Check every 6 hours
 
-    return () => clearInterval(refreshInterval);
+    return () => {
+      clearInterval(refreshInterval);
+      // Clean up force logout event listener
+      window.removeEventListener('forceLogout', handleForceLogout);
+    };
   }, [isLoggedIn]);
+
+  // Add force logout event listener
+  useEffect(() => {
+    window.addEventListener('forceLogout', handleForceLogout);
+    
+    return () => {
+      window.removeEventListener('forceLogout', handleForceLogout);
+    };
+  }, []);
 
   const refreshToken = async () => {
     try {
@@ -76,14 +110,6 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleTokenExpiry = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('tokenExpiry');
-    setIsLoggedIn(false);
-    setUser(null);
-    setLoading(false);
   };
 
   const fetchUserProfile = async () => {

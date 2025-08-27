@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudnary.js';
 import authRouter from './routes/auth.routes.js';
@@ -12,7 +13,7 @@ import videoRouter from './routes/video.routes.js';
 import paymentRouter from './routes/payment.routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 dotenv.config();
 
@@ -21,6 +22,9 @@ app.use(cors({
   origin: 'http://localhost:5173', // Vite default port
   credentials: true
 }));
+
+// Cookie parser middleware
+app.use(cookieParser());
 
 // Increase payload size limits
 app.use(express.json({ limit: '50mb' }));

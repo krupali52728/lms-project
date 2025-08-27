@@ -95,6 +95,19 @@ const Login = () => {
         navigate('/');
         
       } else {
+        // Check if the error is due to email verification required
+        if (response.requiresVerification && response.userId) {
+          // Navigate to OTP verification with user data
+          navigate('/verify-otp', {
+            state: {
+              userId: response.userId,
+              email: formData.email,
+              name: 'User' // We don't have the name from login
+            }
+          });
+          return;
+        }
+        
         setErrors({ submit: response.message || 'Login failed. Please try again.' });
       }
     } catch (error) {

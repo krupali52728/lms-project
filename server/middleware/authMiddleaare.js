@@ -33,8 +33,9 @@ export const authenticate = async (req, res, next) => {
     const now = Date.now();
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     
-    if (tokenExp - now < sevenDaysInMs) {
-      // Token is about to expire, set a header to indicate refresh needed
+    // Only set refresh header if token is actually about to expire
+    if (tokenExp - now < sevenDaysInMs && tokenExp > now) {
+      // Token is about to expire but still valid, set a header to indicate refresh needed
       res.set('X-Token-Refresh-Required', 'true');
     }
     

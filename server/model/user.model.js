@@ -41,6 +41,16 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
     }],
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: {
+        type: String
+    },
+    otpExpiry: {
+        type: Date
+    }
 },{timestamps:true});
 
 const User = mongoose.model("User",userSchema); 

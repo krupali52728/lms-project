@@ -14,7 +14,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { registerUser } from '../../Api/authApi.js';
+import { sendRegistrationOTP } from '../../Api/authApi.js';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -115,40 +115,32 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
-      // Prepare data for API call
+      // Prepare data for OTP sending
       const userData = {
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password
       };
 
-      // Call the real register API
-      const response = await registerUser(userData);
+      // Send OTP instead of direct registration
+      const response = await sendRegistrationOTP(userData);
       
       if (response.success) {
-        // Use AuthContext login method to automatically log in user
-        login(response.token);
-        
-        // Reset form
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          password: '',
-          confirmPassword: '',
-          agreeToTerms: false
+        // Navigate to OTP verification with user data
+        navigate('/verify-otp', {
+          state: {
+            userId: response.userId,
+            email: formData.email,
+            name: userData.name
+          }
         });
         
-        // Redirect to home page
-        navigate('/');
-        
       } else {
-        setErrors({ submit: response.message || 'Registration failed. Please try again.' });
+        setErrors({ submit: response.message || 'Failed to send verification code. Please try again.' });
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setErrors({ submit: error.message || 'Registration failed. Please try again.' });
+      setErrors({ submit: error.message || 'Failed to send verification code. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -558,11 +550,11 @@ const SignUp = () => {
               {isLoading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Creating Account...</span>
+                  <span>Sending Verification Code...</span>
                 </>
               ) : (
                 <>
-                  <span>Create Account</span>
+                  <span>Send Verification Code</span>
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}

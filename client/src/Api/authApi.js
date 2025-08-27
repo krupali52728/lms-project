@@ -1,6 +1,41 @@
 import api from "./config.js";
 
-//  Register User
+
+
+// Send OTP for registration
+export const sendRegistrationOTP = async (userData) => {
+  try {
+    const res = await api.post("/auth/send-registration-otp", userData);
+    return res.data;
+  } catch (error) {
+    console.error("Send OTP error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
+// Verify OTP and complete registration
+export const verifyOTPAndRegister = async (otpData) => {
+  try {
+    const res = await api.post("/auth/verify-otp", otpData);
+    return res.data;
+  } catch (error) {
+    console.error("Verify OTP error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
+// Resend OTP
+export const resendOTP = async (userId) => {
+  try {
+    const res = await api.post("/auth/resend-otp", { userId });
+    return res.data;
+  } catch (error) {
+    console.error("Resend OTP error:", error.response?.data || error.message);
+    throw error.response?.data || { message: "Something went wrong" };
+  }
+};
+
+//  Register User (keeping original for backward compatibility)
 export const registerUser = async (userData) => {
   try {
     const res = await api.post("/auth/register", userData);
