@@ -23,11 +23,15 @@ import {
 } from 'lucide-react';
 
 // Import API functions
-import { getEducatorCourses, deleteCourse, toggleCourse } from '../../Api/courseApi.js';
+import { getEducatorCourses, deleteCourse, toggleCourse,getAllCourses } from '../../Api/courseApi.js';
+// Import auth context to get current user
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const EducatorAllCourse = () => {
+  const { user, loading: authLoading } = useAuth(); // Get current user and loading state from context
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterOwnership, setFilterOwnership] = useState('all'); // 'all', 'mine', 'others'
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [loading, setLoading] = useState(true);
@@ -38,22 +42,25 @@ const EducatorAllCourse = () => {
 
 
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    // Only fetch courses after user authentication is complete
+    if (!authLoading) {
+      fetchCourses();
+    }
+  }, [authLoading]);
 
   const fetchCourses = async () => {
     try {
       setLoading(true);
       setError('');
       
-      const response = await getEducatorCourses();
+      const response = await getAllCourses();
       
       if (response.success && response.courses) {
-        const educatorCourses = response.courses;
+        const allCourses = response.courses;
        
         
         // Transform the data to match our component's expected format
-        const transformedCourses = educatorCourses.map(course => ({
+        const transformedCourses = allCourses.map(course => ({
           id: course._id,
           title: course.title,
           description: course.description,
@@ -66,7 +73,9 @@ const EducatorAllCourse = () => {
           lessons: course.lectures?.length || 0,
           duration: formatDuration(course.totalDuration),
           createdAt: course.createdAt,
-          updatedAt: course.updatedAt
+          updatedAt: course.updatedAt,
+          educator: course.educator, // Include educator info
+          isOwnCourse: user && course.educator && course.educator._id === user._id // Check if current user owns this course
         }));
         
         setCourses(transformedCourses);
@@ -155,7 +164,10 @@ const EducatorAllCourse = () => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || course.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesOwnership = filterOwnership === 'all' || 
+                           (filterOwnership === 'mine' && (course.isOwnCourse || false)) ||
+                           (filterOwnership === 'others' && !(course.isOwnCourse || false));
+    return matchesSearch && matchesStatus && matchesOwnership;
   });
 
   // Sort courses
@@ -184,9 +196,9 @@ const EducatorAllCourse = () => {
       className="text-center py-16"
     >
       <BookOpen className="w-20 h-20 text-slate-600 mx-auto mb-6" />
-      <h3 className="text-2xl font-bold text-white mb-4">No courses yet</h3>
+      <h3 className="text-2xl font-bold text-white mb-4">No courses available</h3>
       <p className="text-slate-400 mb-8 max-w-md mx-auto">
-        Start sharing your knowledge by creating your first course. Students are waiting to learn from you!
+        There are currently no courses available on the platform. Be the first to create one!
       </p>
       <Link
         to="/educator/add-course"
@@ -213,8 +225,11 @@ const EducatorAllCourse = () => {
         )}
         <div className="absolute top-4 left-4">
           <button
-            onClick={() => handleToggleCourse(course.id, course.status)}
-            className={`px-3 py-1 backdrop-blur-sm rounded-full text-white text-sm transition-all duration-200 hover:scale-105 ${
+            onClick={() => course.isOwnCourse && handleToggleCourse(course.id, course.status)}
+            disabled={!course.isOwnCourse}
+            className={`px-3 py-1 backdrop-blur-sm rounded-full text-white text-sm transition-all duration-200 ${
+              course.isOwnCourse ? 'hover:scale-105' : 'cursor-not-allowed opacity-75'
+            } ${
               course.status === 'published' 
                 ? 'bg-green-500/20 border border-green-500/30 hover:bg-green-500/30' 
                 : course.status === 'draft'
@@ -232,12 +247,14 @@ const EducatorAllCourse = () => {
           </div>
         </div>
         <div className="absolute bottom-4 right-4">
-          <button 
-            onClick={() => handleDeleteCourse(course.id, course.title)}
-            className="p-2 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-red-600/70 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {course.isOwnCourse && (
+            <button 
+              onClick={() => handleDeleteCourse(course.id, course.title)}
+              className="p-2 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-red-600/70 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -246,6 +263,23 @@ const EducatorAllCourse = () => {
         <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors duration-200">
           {course.title}
         </h3>
+        
+        {/* Educator Info */}
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+            <span className="text-xs text-white font-medium">
+              {course.educator?.name?.charAt(0)?.toUpperCase() || 'E'}
+            </span>
+          </div>
+          <span className="text-slate-400 text-sm">
+            by {course.educator?.name || 'Unknown Educator'}
+          </span>
+          {course.isOwnCourse && (
+            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+              Your Course
+            </span>
+          )}
+        </div>
         
         <p className="text-slate-400 text-sm mb-4 line-clamp-2">{course.description}</p>
 
@@ -292,13 +326,25 @@ const EducatorAllCourse = () => {
             <Eye className="w-4 h-4" />
             <span>View</span>
           </Link>
-          <Link
-            to={`/educator/edit-course/${course.id}`}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2"
-          >
-            <Edit className="w-4 h-4" />
-            <span>Edit</span>
-          </Link>
+          {course.isOwnCourse ? (
+            <Link
+              to={`/educator/edit-course/${course.id}`}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2 cursor-pointer hover:scale-105"
+              onClick={() => console.log('Edit button clicked for course:', course.id)}
+            >
+              <Edit className="w-4 h-4" />
+              <span>Edit</span>
+            </Link>
+          ) : (
+            <button
+              disabled
+              title="You can only edit your own courses"
+              className="flex-1 px-4 py-2 bg-slate-600/50 text-slate-500 font-medium rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              <Edit className="w-4 h-4" />
+              <span>Edit</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -341,10 +387,10 @@ const EducatorAllCourse = () => {
             </Link>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-white">
-                All Courses
+                All Platform Courses
               </h1>
               <p className="text-slate-300 mt-2">
-                Manage and track all your courses
+                Browse and manage all courses on the platform
               </p>
             </div>
           </div>
@@ -359,11 +405,13 @@ const EducatorAllCourse = () => {
         </motion.div>
 
         {/* Loading State */}
-        {loading ? (
+        {loading || authLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <Loader className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
-              <p className="text-slate-400">Loading your courses...</p>
+              <p className="text-slate-400">
+                {authLoading ? 'Authenticating...' : 'Loading all platform courses...'}
+              </p>
             </div>
           </div>
         ) : (
@@ -380,7 +428,7 @@ const EducatorAllCourse = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-2xl font-bold text-white">{courses.length}</h3>
-                    <p className="text-slate-400 text-sm">Total Courses</p>
+                    <p className="text-slate-400 text-sm">Platform Courses</p>
                   </div>
                   <BookOpen className="w-8 h-8 text-blue-400" />
                 </div>
@@ -389,20 +437,20 @@ const EducatorAllCourse = () => {
               <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.status === 'published').length}</h3>
-                    <p className="text-slate-400 text-sm">Published</p>
+                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.isOwnCourse || false).length}</h3>
+                    <p className="text-slate-400 text-sm">My Courses</p>
                   </div>
-                  <TrendingUp className="w-8 h-8 text-green-400" />
+                  <BookOpen className="w-8 h-8 text-blue-400" />
                 </div>
               </div>
 
               <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.status === 'draft').length}</h3>
-                    <p className="text-slate-400 text-sm">Drafts</p>
+                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => !c.isOwnCourse || false).length}</h3>
+                    <p className="text-slate-400 text-sm">Other Courses</p>
                   </div>
-                  <Settings className="w-8 h-8 text-yellow-400" />
+                  <Users className="w-8 h-8 text-green-400" />
                 </div>
               </div>
 
@@ -412,7 +460,7 @@ const EducatorAllCourse = () => {
                     <h3 className="text-2xl font-bold text-white">
                       {courses.reduce((sum, course) => sum + (course.students || 0), 0)}
                     </h3>
-                    <p className="text-slate-400 text-sm">Total Students</p>
+                    <p className="text-slate-400 text-sm">Platform Students</p>
                   </div>
                   <Users className="w-8 h-8 text-purple-400" />
                 </div>
@@ -451,6 +499,17 @@ const EducatorAllCourse = () => {
                 <option value="published">Published</option>
                 <option value="draft">Draft</option>
                 <option value="archived">Archived</option>
+              </select>
+
+              {/* Ownership Filter */}
+              <select
+                value={filterOwnership}
+                onChange={(e) => setFilterOwnership(e.target.value)}
+                className="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              >
+                <option value="all">All Courses</option>
+                <option value="mine">My Courses</option>
+                <option value="others">Other Educators</option>
               </select>
 
               {/* Sort */}

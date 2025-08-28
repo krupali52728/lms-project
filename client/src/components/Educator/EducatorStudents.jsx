@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -22,7 +22,7 @@ import {
   Target,
   GraduationCap
 } from 'lucide-react';
-
+ import {getAllStudentsAndEducators} from '../../Api/userApi.js'
 const EducatorStudents = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCourse, setFilterCourse] = useState('all');
@@ -40,9 +40,27 @@ const EducatorStudents = () => {
     // Empty array for now - you'll populate this with your backend API
   ]);
 
+  
+
+ 
+
   const [courses, setCourses] = useState([
-    // Empty array - your courses for filtering
+    
   ]);
+ 
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const res = await getAllStudentsAndEducators();
+        console.log('getAllStudentsAndEducators response:', res);
+        
+      } catch (error) {
+        console.error('Failed to fetch students courses:', error);
+      }
+    };
+
+    fetchAll();
+  }, []);
 
   const studentStats = {
     totalStudents: students.length,

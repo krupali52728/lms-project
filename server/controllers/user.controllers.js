@@ -710,3 +710,18 @@ export const getUserStats = async (req, res) => {
     });
   }
 };
+
+// get all students and educators
+export const getAllStudentsAndEducators = async (req, res) => {
+  try {
+    const users = await User.find({ role: { $in: ['student', 'educator'] } });
+    res.status(200).json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    console.log("User fetch problem", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

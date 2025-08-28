@@ -5,7 +5,7 @@ import {
   Plus, 
   BookOpen, 
   Users, 
-  DollarSign,
+  
   TrendingUp,
   BarChart3,
   Settings,
@@ -13,7 +13,8 @@ import {
   Target,
   Clock,
   Star,
-  AlertCircle
+  AlertCircle,
+  IndianRupee
 } from 'lucide-react';
 import { getAllCourses } from '../../Api/courseApi.js';
 
@@ -112,8 +113,7 @@ const EducatorDashboard = () => {
   const quickStats = [
     { label: 'Total Courses', value: stats.totalCourses.toString(), icon: BookOpen, color: 'blue' },
     { label: 'Total Students', value: stats.totalStudents.toString(), icon: Users, color: 'green' },
-    { label: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, icon: DollarSign, color: 'purple' },
-    { label: 'Avg Rating', value: stats.avgRating.toFixed(1), icon: Star, color: 'yellow' }
+    { label: 'Total Revenue', value: `${stats.totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'purple' },
   ];
 
   return (

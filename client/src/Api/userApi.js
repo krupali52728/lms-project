@@ -116,3 +116,17 @@ export const getUserStats = async () => {
     throw error;
   }
 };
+
+// Get All Students and Educators
+export const getAllStudentsAndEducators = async () => {
+  try {
+    const res = await api.get("/user/all-students-and-educators");
+
+    console.log("All Students and Educators:", res.data);
+
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching all students and educators:", error);
+    throw error;
+  }
+};

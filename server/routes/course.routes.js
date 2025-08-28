@@ -8,7 +8,8 @@ import {
   getCourseById,
   togglePublishCourse,
   enrollInCourse,
-  checkPurchaseStatus
+  checkPurchaseStatus,
+  updateCourse
 } from '../controllers/course.controllers.js';
 
 const courseRouter = express.Router();
@@ -19,12 +20,16 @@ courseRouter.get('/all', getAllCourses);
 // Protected routes (authentication required)
 courseRouter.post('/create', authenticate, authorize('educator'), createCourse); 
 courseRouter.get('/my-courses', authenticate, authorize('educator'), getCourseEducator); 
-courseRouter.delete('/:courseId', authenticate, authorize('educator'), deleteCourse); 
-courseRouter.post('/enroll/:courseId', authenticate,  enrollInCourse);
-courseRouter.get('/:courseId/purchase-status', authenticate, checkPurchaseStatus);
-courseRouter.patch('/:courseId/toggle-publish', authenticate, authorize('educator'), togglePublishCourse); 
 
-// This route should come last because it uses a parameter
+// Routes with courseId parameter - more specific routes first
+courseRouter.patch('/:courseId/update', authenticate, authorize('educator'), updateCourse);
+courseRouter.patch('/:courseId', authenticate, authorize('educator'), updateCourse); // Alternative update route
+courseRouter.patch('/:courseId/toggle-publish', authenticate, authorize('educator'), togglePublishCourse);
+courseRouter.post('/enroll/:courseId', authenticate, enrollInCourse);
+courseRouter.get('/:courseId/purchase-status', authenticate, checkPurchaseStatus);
+courseRouter.delete('/:courseId', authenticate, authorize('educator'), deleteCourse);
+
+// Generic courseId route - must come last
 courseRouter.get('/:courseId', getCourseById); 
 
 export default courseRouter;

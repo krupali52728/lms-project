@@ -9,7 +9,8 @@ import {
   userRating,
   checkCoursePurchase,
   getEnrolledCourses,
-  getUserStats
+  getUserStats,
+  getAllStudentsAndEducators
 } from "../controllers/user.controllers.js";
 import express from 'express';
 import { authenticate, authorize } from "../middleware/authMiddleaare.js";
@@ -42,7 +43,8 @@ userRouter.get('/progress/:courseId', authenticate, authorize('student','educato
 // Course rating routes (students only)
 userRouter.post('/rating/:courseId', authenticate, authorize('student','educator'), userRating);
 
-
+// Get All Students and Educators
+userRouter.get('/all-students-and-educators', authenticate, authorize('student','educator'), getAllStudentsAndEducators);
 
 export default userRouter;
 
