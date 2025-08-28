@@ -272,7 +272,35 @@ export const checkPurchaseStatus = async (req, res) => {
 
 export const updateCourse = async (req, res) => {
   try {
+    const {courseId} = req.params;
+    const {title, description, category, price, difficulty, duration, thumbnail, tags, requirements, objectives, isPublished, status} = req.body;
+
+    // Validate request body
     
+
+    // Find course by ID
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    // Update course fields
+    course.title = title;
+    course.description = description;
+    course.category = category;
+    course.price = price;
+    course.difficulty = difficulty;
+    course.duration = duration;
+    course.thumbnail = thumbnail;
+    course.tags = tags;
+    course.requirements = requirements;
+    course.objectives = objectives;
+    course.isPublished = isPublished;
+    course.status = status;
+
+    await course.save();
+
+    res.status(200).json({ success: true, message: "Course updated successfully", course });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

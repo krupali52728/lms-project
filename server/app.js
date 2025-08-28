@@ -11,11 +11,14 @@ import chapterRouter from './routes/chapter.routes.js';
 import lectureRouter from './routes/lecture.routes.js';
 import videoRouter from './routes/video.routes.js';
 import paymentRouter from './routes/payment.routes.js';
+import morgan from 'morgan';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 dotenv.config();
+
+app.use(morgan('dev'));
 
 // CORS configuration
 app.use(cors({

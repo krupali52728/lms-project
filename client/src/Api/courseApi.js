@@ -48,12 +48,12 @@ export const deleteCourse = async (courseId) =>{
 // update a course
 export const updateCourse = async (courseId, courseData) => {
     try {
-      
-       
-      
-   } catch (error) {
-       
-   }
+        const res = await api.patch(`course/${courseId}/update`, courseData);
+        return res.data;
+    } catch (error) {
+        console.log("Update course error:", error.response?.data || error.message);
+        throw error.response?.data || { message: "Something went wrong" };
+    }
 }
 
 //enroll a in a course

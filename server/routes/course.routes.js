@@ -23,7 +23,6 @@ courseRouter.get('/my-courses', authenticate, authorize('educator'), getCourseEd
 
 // Routes with courseId parameter - more specific routes first
 courseRouter.patch('/:courseId/update', authenticate, authorize('educator'), updateCourse);
-courseRouter.patch('/:courseId', authenticate, authorize('educator'), updateCourse); // Alternative update route
 courseRouter.patch('/:courseId/toggle-publish', authenticate, authorize('educator'), togglePublishCourse);
 courseRouter.post('/enroll/:courseId', authenticate, enrollInCourse);
 courseRouter.get('/:courseId/purchase-status', authenticate, checkPurchaseStatus);
