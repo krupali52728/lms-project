@@ -18,6 +18,32 @@ const userCourseProgressSchema = new mongoose.Schema({
     progress:{
         type: Number,
         default: 0
+    },
+    completedLectures: [{
+        lectureId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Lecture"
+        },
+        chapterId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Chapter"
+        },
+        chapter: Number, 
+        lecture: Number,
+        completedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    lastPosition: {
+        chapter: {
+            type: Number,
+            default: 0
+        },
+        lecture: {
+            type: Number,
+            default: 0
+        }
     }
 
     

@@ -3,25 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Play,
-  PlayCircle,
-  Pause,
   SkipBack,
   SkipForward,
-  Volume2,
   Settings,
   Maximize,
   Minimize,
-  Download,
   FileText,
-  CheckCircle,
   Lock,
   Clock,
   BookOpen,
-  User,
   ArrowLeft,
   Menu,
   X,
-  Star,
   ChevronLeft,
   ChevronRight,
   Circle,
@@ -183,42 +176,62 @@ const CourseLearn = () => {
   // Load user's saved progress for this course
   useEffect(() => {
     const loadProgress = async () => {
-      if (!hasAccess || !courseId || !course) return;
+      // Wait for all required data to be available
+      if (!hasAccess || !courseId || !course || !course.chapters || course.chapters.length === 0) {
+        console.log('Waiting for course data before loading progress...');
+        return;
+      }
 
       try {
         console.log('Loading progress for course:', courseId);
+        console.log('Course structure ready:', course.chapters.length, 'chapters');
         const res = await getCourseProgress(courseId);
         console.log('Progress API response:', res);
         
         if (res && res.success) {
-          const { completedLectures: serverCompleted = [], lastPosition } = res.data || {};
-          console.log('Server completed lectures:', serverCompleted);
+          const { completedLectures = [], lastPosition } = res.data || {};
+          console.log('Server completed lectures (raw):', JSON.stringify(completedLectures, null, 2));
 
           const completedSet = new Set();
           
-          // Handle different formats of completed lectures
-          if (Array.isArray(serverCompleted)) {
-            serverCompleted.forEach(item => {
-              // Case 1: Object with chapter/lecture indices
+          // Handle completed lectures array
+          if (Array.isArray(completedLectures)) {
+            completedLectures.forEach((item, index) => {
+              console.log(`Processing completion item ${index}:`, JSON.stringify(item, null, 2));
+              
+              // Handle lecture completion objects with indices (fallback method)
               if (typeof item === 'object' && typeof item.chapter === 'number' && typeof item.lecture === 'number') {
                 const key = `${item.chapter}-${item.lecture}`;
                 completedSet.add(key);
-                console.log('Added completion key:', key);
+                console.log('Added completion key from indices:', key);
               }
-              // Case 2: Lecture ID string - map to chapter/lecture indices
-              else if (typeof item === 'string' || (typeof item === 'object' && item.lectureId)) {
-                const lectureId = typeof item === 'string' ? item : item.lectureId;
+              
+              // Handle completion objects with lectureId - map to chapter/lecture indices
+              if (item.lectureId) {
+                const lectureId = item.lectureId;
+                console.log('Looking for lecture ID:', lectureId, 'in course structure');
                 
                 // Find this lecture in the course structure
+                let found = false;
                 course.chapters?.forEach((chapter, chapterIndex) => {
-                  chapter.chapterContent?.forEach((lecture, lectureIndex) => {
-                    if (lecture._id === lectureId) {
-                      const key = `${chapterIndex}-${lectureIndex}`;
-                      completedSet.add(key);
-                      console.log(`Mapped lecture ID ${lectureId} to completion key:`, key);
-                    }
-                  });
+                  if (chapter.chapterContent && Array.isArray(chapter.chapterContent)) {
+                    chapter.chapterContent.forEach((lecture, lectureIndex) => {
+                      if (lecture && lecture._id === lectureId) {
+                        const key = `${chapterIndex}-${lectureIndex}`;
+                        completedSet.add(key);
+                        console.log(`✓ Mapped lecture ID ${lectureId} to completion key:`, key);
+                        found = true;
+                      }
+                    });
+                  }
                 });
+                
+                if (!found) {
+                  console.warn('Could not find lecture ID in course structure:', lectureId);
+                  console.warn('Available course structure:', course.chapters.map(ch => ({ 
+                    chapterContent: ch.chapterContent?.map(lec => lec._id) || [] 
+                  })));
+                }
               }
             });
           }
@@ -226,7 +239,7 @@ const CourseLearn = () => {
           console.log('Final completed set:', Array.from(completedSet));
           setCompletedLectures(completedSet);
 
-          // If server provided lastPosition, restore it
+          // Restore last position if available
           if (lastPosition && typeof lastPosition.chapter === 'number' && typeof lastPosition.lecture === 'number') {
             console.log('Restoring last position:', lastPosition);
             setCurrentChapter(lastPosition.chapter);
@@ -235,11 +248,12 @@ const CourseLearn = () => {
         }
       } catch (err) {
         console.error('Failed to load course progress:', err);
+        // If no progress found, start fresh - don't show error
       }
     };
 
     loadProgress();
-  }, [hasAccess, courseId, course]); // Added course dependency
+  }, [hasAccess, courseId, course?.chapters]);
 
   // Load current lecture video
   useEffect(() => {
@@ -387,12 +401,22 @@ const CourseLearn = () => {
     const lectureKey = `${chapterIndex}-${lectureIndex}`;
     console.log('Marking lecture complete:', lectureKey);
 
+    // Check if already completed
+    if (completedLectures.has(lectureKey)) {
+      console.log('Lecture already completed:', lectureKey);
+      return;
+    }
+
     // Get the actual lecture ID from the course data
     const lecture = course?.chapters?.[chapterIndex]?.chapterContent?.[lectureIndex];
     if (!lecture || !lecture._id) {
       console.error('Cannot find lecture ID for completion');
       return;
     }
+
+    // Get chapter ID
+    const chapter = course?.chapters?.[chapterIndex];
+    const chapterId = chapter?._id;
 
     // Optimistic update locally
     setCompletedLectures(prev => {
@@ -401,13 +425,11 @@ const CourseLearn = () => {
       return newSet;
     });
 
-    // Persist progress to server - send lecture ID
+    // Persist progress to server
     try {
       const progressData = {
         lectureId: lecture._id,
-        chapterId: course.chapters[chapterIndex]._id,
-        completed: true,
-        // Also include indices for fallback
+        chapterId: chapterId,
         chapter: chapterIndex,
         lecture: lectureIndex
       };
@@ -415,6 +437,10 @@ const CourseLearn = () => {
       console.log('Sending progress update:', progressData);
       const response = await updateCourseProgress(courseId, progressData);
       console.log('Progress update response:', response);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to update progress');
+      }
     } catch (err) {
       console.error('Failed to persist lecture completion:', err);
       // Rollback optimistic update on error
@@ -424,15 +450,21 @@ const CourseLearn = () => {
         console.log('Rolled back completion due to error');
         return newSet;
       });
+      
+      // Optionally show error to user
+      alert('Failed to save progress. Please try again.');
+      return;
     }
 
-    // Auto-advance to next lecture
+    // Auto-advance to next lecture only after successful save
     const currentChapterLectures = course.chapters[chapterIndex]?.chapterContent || [];
     if (lectureIndex + 1 < currentChapterLectures.length) {
-      setCurrentLecture(lectureIndex + 1);
+      setTimeout(() => setCurrentLecture(lectureIndex + 1), 500); // Small delay for better UX
     } else if (chapterIndex + 1 < course.chapters.length) {
-      setCurrentChapter(chapterIndex + 1);
-      setCurrentLecture(0);
+      setTimeout(() => {
+        setCurrentChapter(chapterIndex + 1);
+        setCurrentLecture(0);
+      }, 500);
     }
   };
 
@@ -469,7 +501,9 @@ const CourseLearn = () => {
       total + (chapter.chapterContent?.length || 0), 0
     );
     
-    return totalLectures > 0 ? (completedLectures.size / totalLectures) * 100 : 0;
+    const progressPercentage = totalLectures > 0 ? (completedLectures.size / totalLectures) * 100 : 0;
+    console.log(`Progress calculation: ${completedLectures.size}/${totalLectures} = ${progressPercentage.toFixed(1)}%`);
+    return progressPercentage;
   };
 
   const isLectureCompleted = (chapterIndex, lectureIndex) => {

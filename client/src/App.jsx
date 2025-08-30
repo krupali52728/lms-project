@@ -27,6 +27,7 @@ import EducatorStudents from './components/Educator/EducatorStudents.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 import './index.css';
+import AllCourse from './components/course/AllCourse.jsx';
 
 function App() {
   return (
@@ -74,7 +75,7 @@ function App() {
                   <Route path="/verify-otp" element={<OTPVerification />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/course/:id" element={<CourseDetails />} />
-                  <Route path="/course" element={<Search />} /> 
+                  <Route path="/course" element={<AllCourse />} /> 
                   <Route path="/payment/success" element={<PaymentSuccess />} />
                   <Route path="*" element={<NotFound />} />
                   

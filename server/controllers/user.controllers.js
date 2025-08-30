@@ -397,7 +397,7 @@ export const updateUserCourseProgress = async (req, res) =>{
   try {
     const { courseId } = req.params;
     const { userId } = req.user;
-    const { completed, progress } = req.body;
+    const { completed, progress, lectureId, chapterId, chapter, lecture, lastPosition } = req.body;
 
     // Check if user is enrolled in the course
     const user = await User.findById(userId);
@@ -409,7 +409,7 @@ export const updateUserCourseProgress = async (req, res) =>{
     }
 
     // Check if course exists
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).populate('chapters');
     if (!course) {
       return res.status(404).json({
         success: false,
@@ -423,28 +423,89 @@ export const updateUserCourseProgress = async (req, res) =>{
       courseId: courseId
     });
 
-    if (courseProgress) {
-      // Update existing progress
-      courseProgress.completed = completed !== undefined ? completed : courseProgress.completed;
-      courseProgress.progress = progress !== undefined ? progress : courseProgress.progress;
-      await courseProgress.save();
-    } else {
+    if (!courseProgress) {
       // Create new progress record
       courseProgress = new userCourseProgress({
         userId: userId,
         courseId: courseId,
-        completed: completed || false,
-        progress: progress || 0
+        completed: false,
+        progress: 0,
+        completedLectures: [],
+        lastPosition: { chapter: 0, lecture: 0 }
       });
-      await courseProgress.save();
     }
+
+    // Handle lecture completion
+    if (lectureId && (chapter !== undefined || chapterId)) {
+      console.log('Processing lecture completion:', { lectureId, chapterId, chapter, lecture });
+      console.log('Current completed lectures before update:', courseProgress.completedLectures);
+      
+      // Check if lecture is already marked as completed
+      const existingCompletion = courseProgress.completedLectures.find(
+        cl => cl.lectureId?.toString() === lectureId.toString() || 
+              (cl.chapter === chapter && cl.lecture === lecture)
+      );
+
+      console.log('Existing completion found:', existingCompletion);
+
+      if (!existingCompletion) {
+        // Add new completed lecture
+        const completionData = {
+          lectureId: lectureId,
+          completedAt: new Date()
+        };
+        
+        if (chapterId) completionData.chapterId = chapterId;
+        if (chapter !== undefined) completionData.chapter = chapter;
+        if (lecture !== undefined) completionData.lecture = lecture;
+
+        console.log('Adding completion data:', completionData);
+        courseProgress.completedLectures.push(completionData);
+        
+        // Calculate progress percentage
+        const totalLectures = course.chapters.reduce((total, ch) => {
+          return total + (ch.chapterContent ? ch.chapterContent.length : 0);
+        }, 0);
+        
+        if (totalLectures > 0) {
+          const completedCount = courseProgress.completedLectures.length;
+          courseProgress.progress = Math.round((completedCount / totalLectures) * 100);
+          
+          // Mark course as completed if all lectures are done
+          if (completedCount === totalLectures) {
+            courseProgress.completed = true;
+          }
+        }
+      }
+    }
+
+    // Handle overall progress updates
+    if (completed !== undefined) {
+      courseProgress.completed = completed;
+    }
+    if (progress !== undefined) {
+      courseProgress.progress = progress;
+    }
+
+    // Handle last position updates
+    if (lastPosition) {
+      courseProgress.lastPosition = lastPosition;
+    }
+
+    console.log('Saving course progress with completed lectures:', courseProgress.completedLectures);
+    await courseProgress.save();
+    console.log('Course progress saved successfully');
 
     res.status(200).json({
       success: true,
       message: "Course progress updated successfully",
-      courseProgress
+      data: {
+        courseProgress,
+        completedLectures: courseProgress.completedLectures
+      }
     });
   } catch (error) {
+      console.error('Update course progress error:', error);
       res.status(500).json({
         success: false,
         message: error.message
@@ -473,18 +534,32 @@ export const getUserCourseProgress = async(req,res)=>{
       courseId: courseId
     }).populate('courseId', 'title totalDuration');
 
+    console.log('Retrieved course progress for user', userId, 'course', courseId, ':', courseProgress);
+
     if (!courseProgress) {
-      return res.status(404).json({
-        success: false,
-        message: "No progress found for this course"
+      console.log('No progress found, returning empty progress');
+      // Return empty progress if none exists
+      return res.status(200).json({
+        success: true,
+        data: {
+          courseProgress: null,
+          completedLectures: [],
+          lastPosition: { chapter: 0, lecture: 0 }
+        }
       });
     }
 
+    console.log('Returning completed lectures:', courseProgress.completedLectures);
     res.status(200).json({
       success: true,
-      courseProgress
+      data: {
+        courseProgress,
+        completedLectures: courseProgress.completedLectures || [],
+        lastPosition: courseProgress.lastPosition || { chapter: 0, lecture: 0 }
+      }
     });
   } catch (error) {
+      console.error('Get course progress error:', error);
       res.status(500).json({
         success: false,
         message: error.message

@@ -12,9 +12,16 @@ const CourseCard = ({ course }) => {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
+      layout
+      whileHover={{ scale: 1.02, y: -5 }}
       whileTap={{ scale: 0.98 }}
-      className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/50 transition-all duration-300 cursor-pointer group"
+      transition={{ 
+        type: "spring", 
+        stiffness: 300, 
+        damping: 30,
+        layout: { duration: 0.3 }
+      }}
+      className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/50 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 cursor-pointer group h-full flex flex-col"
       onClick={handleCourseClick}
     >
       {/* Course Thumbnail */}
@@ -56,7 +63,7 @@ const CourseCard = ({ course }) => {
       </div>
 
       {/* Course Info */}
-      <div className="p-4"> {/* // reduced from p-6 */}
+      <div className="p-4 flex-grow flex flex-col"> {/* // reduced from p-6 and added flex properties */}
         <h3 className="text-base font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors duration-200 line-clamp-2">
           {course.title}
         </h3>
@@ -86,7 +93,7 @@ const CourseCard = ({ course }) => {
         </div>
 
         {/* Difficulty Badge */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-auto pt-2">
           <span
             className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
               (course.level || course.difficulty) === 'Beginner' 
@@ -99,15 +106,17 @@ const CourseCard = ({ course }) => {
             {course.level || course.difficulty || 'Beginner'}
           </span>
           
-          <button 
+          <motion.button 
             onClick={(e) => {
               e.stopPropagation();
               handleCourseClick();
             }}
-            className="px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-medium rounded-md hover:from-blue-700 hover:to-purple-700 transition-all duration-200 opacity-0 group-hover:opacity-100"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-3 py-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-medium rounded-md hover:from-blue-700 hover:to-purple-700 transition-all duration-200 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0"
           >
             View
-          </button>
+          </motion.button>
         </div>
       </div>
     </motion.div>
