@@ -17,6 +17,8 @@ import {
   IndianRupee
 } from 'lucide-react';
 import { getAllCourses } from '../../Api/courseApi.js';
+import { getAllStudentsAndEducators } from '../../Api/userApi.js';
+import { getEducatorCourses } from '../../Api/courseApi.js';
 
 const EducatorDashboard = () => {
   const [courses, setCourses] = useState([]);
@@ -25,6 +27,10 @@ const EducatorDashboard = () => {
     totalStudents: 0,
     totalRevenue: 0,
     avgRating: 0
+  });
+  const [platformStats, setPlatformStats] = useState({
+    totalStudents: 0,
+    totalEducators: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,9 +48,15 @@ const EducatorDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await getAllCourses();
-      if (response.success) {
-        const userCourses = response.courses; // In real app, filter by current user
+      
+      // Fetch educator's courses and platform stats in parallel
+      const [coursesResponse, platformResponse] = await Promise.all([
+        getEducatorCourses(), // Changed from getAllCourses to getEducatorCourses
+        getAllStudentsAndEducators()
+      ]);
+      
+      if (coursesResponse.success) {
+        const userCourses = coursesResponse.courses; // These are the educator's own courses (published and unpublished)
         setCourses(userCourses);
         
         // Calculate stats
@@ -60,6 +72,37 @@ const EducatorDashboard = () => {
           totalStudents,
           totalRevenue,
           avgRating: 4.8 // Placeholder - calculate from actual ratings
+        });
+      }
+
+      // Set platform stats - using same structure as EducatorStudents
+      if (platformResponse) {
+        const payload = platformResponse?.data ?? platformResponse;
+        let allUsers = [];
+        
+        // Handle different response structures
+        if (Array.isArray(payload)) {
+          allUsers = payload;
+        } else if (payload.data && Array.isArray(payload.data)) {
+          allUsers = payload.data;
+        } else {
+          allUsers = payload.students ?? payload.users ?? [];
+        }
+        
+        // Filter users by role
+        const students = allUsers.filter(user => user.role === 'student');
+        const educators = allUsers.filter(user => user.role === 'educator');
+        
+        setPlatformStats({
+          totalStudents: students.length,
+          totalEducators: educators.length
+        });
+        
+        console.log('Platform Stats:', {
+          totalUsers: allUsers.length,
+          totalStudents: students.length,
+          totalEducators: educators.length,
+          allUsers
         });
       }
     } catch (err) {
@@ -112,8 +155,9 @@ const EducatorDashboard = () => {
   // Quick stats with real data
   const quickStats = [
     { label: 'Total Courses', value: stats.totalCourses.toString(), icon: BookOpen, color: 'blue' },
-    { label: 'Total Students', value: stats.totalStudents.toString(), icon: Users, color: 'green' },
-    { label: 'Total Revenue', value: `${stats.totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'purple' },
+    { label: 'Platform Students', value: platformStats.totalStudents.toString(), icon: Users, color: 'green' },
+    { label: 'Platform Educators', value: platformStats.totalEducators.toString(), icon: Users, color: 'purple' },
+    { label: 'Total Revenue', value: `₹${stats.totalRevenue.toFixed(2)}`, icon: IndianRupee, color: 'yellow' },
   ];
 
   return (

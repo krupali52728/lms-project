@@ -150,6 +150,7 @@ export const getCourseEducator = async (req, res) => {
     const { userId } = req.user;
 
     const courses = await Course.find({ educator: userId })
+      .populate("educator", "name email avatar")
       .populate("chapters")
       .sort({ createdAt: -1 });
 

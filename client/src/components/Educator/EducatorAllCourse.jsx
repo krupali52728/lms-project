@@ -4,26 +4,24 @@ import { motion } from 'framer-motion';
 import { 
   ArrowLeft,
   Search,
-  Filter,
   Edit,
   Eye,
   Trash2,
   Star,
   Users,
-  DollarSign,
   Clock,
-  MoreVertical,
   BookOpen,
   TrendingUp,
-  Settings,
   Copy,
   Archive,
   AlertCircle,
-  Loader
+  Loader,
+  IndianRupee
 } from 'lucide-react';
 
 // Import API functions
-import { getEducatorCourses, deleteCourse, toggleCourse,getAllCourses } from '../../Api/courseApi.js';
+import { getEducatorCourses, deleteCourse, toggleCourse, getAllCourses } from '../../Api/courseApi.js';
+import { getAllStudentsAndEducators } from '../../Api/userApi.js';
 // Import auth context to get current user
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -32,6 +30,7 @@ const EducatorAllCourse = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterOwnership, setFilterOwnership] = useState('all'); // 'all', 'mine', 'others'
+  const [viewType, setViewType] = useState('mine'); // 'platform' or 'mine' - changed default to 'mine'
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [loading, setLoading] = useState(true);
@@ -39,6 +38,10 @@ const EducatorAllCourse = () => {
   
   // Courses data from backend
   const [courses, setCourses] = useState([]);
+  const [platformStats, setPlatformStats] = useState({
+    totalStudents: 0,
+    totalEducators: 0
+  });
 
 
   useEffect(() => {
@@ -46,41 +49,95 @@ const EducatorAllCourse = () => {
     if (!authLoading) {
       fetchCourses();
     }
-  }, [authLoading]);
+  }, [authLoading, viewType]); // Added viewType dependency
 
   const fetchCourses = async () => {
     try {
       setLoading(true);
       setError('');
       
-      const response = await getAllCourses();
+      // Fetch different data based on view type
+      let coursesResponse, platformResponse;
       
-      if (response.success && response.courses) {
-        const allCourses = response.courses;
-       
+      if (viewType === 'mine') {
+        // Fetch only the educator's courses (both published and unpublished)
+        [coursesResponse, platformResponse] = await Promise.all([
+          getEducatorCourses(),
+          getAllStudentsAndEducators()
+        ]);
+      } else {
+        // Fetch all published courses from the platform
+        [coursesResponse, platformResponse] = await Promise.all([
+          getAllCourses(), // Only returns published courses
+          getAllStudentsAndEducators()
+        ]);
+      }
+      
+      if (coursesResponse.success && coursesResponse.courses) {
+        const allCourses = coursesResponse.courses;
+        
+        // Debug: Log the raw course data to see educator information
+        console.log('Raw course data:', allCourses[0]);
+        if (allCourses[0]?.educator) {
+          console.log('Educator data:', allCourses[0].educator);
+        }
         
         // Transform the data to match our component's expected format
-        const transformedCourses = allCourses.map(course => ({
-          id: course._id,
-          title: course.title,
-          description: course.description,
-          price: course.price,
-          discount: course.discount || 0,
-          thumbnail: course.thumbnail,
-          status: course.isPublished ? 'published' : 'draft',
-          rating: calculateAverageRating(course.ratings),
-          students: course.enrolledStudents?.length || 0,
-          lessons: course.lectures?.length || 0,
-          duration: formatDuration(course.totalDuration),
-          createdAt: course.createdAt,
-          updatedAt: course.updatedAt,
-          educator: course.educator, // Include educator info
-          isOwnCourse: user && course.educator && course.educator._id === user._id // Check if current user owns this course
-        }));
+        const transformedCourses = allCourses.map(course => {
+          console.log('Course educator data:', course.educator);
+          return {
+            id: course._id,
+            title: course.title,
+            description: course.description,
+            price: course.price,
+            discount: course.discount || 0,
+            thumbnail: course.thumbnail,
+            status: course.isPublished ? 'published' : 'draft',
+            rating: calculateAverageRating(course.ratings),
+            students: course.enrolledStudents?.length || 0,
+            lessons: course.lectures?.length || 0,
+            duration: formatDuration(course.totalDuration),
+            createdAt: course.createdAt,
+            updatedAt: course.updatedAt,
+            educator: course.educator, // Include educator info
+            instructor: course.instructor, // Also include instructor field if it exists
+            isOwnCourse: user && course.educator && course.educator._id === user._id // Check if current user owns this course
+          };
+        });
         
         setCourses(transformedCourses);
       } else {
-        throw new Error(response.message || 'Failed to fetch courses');
+        throw new Error(coursesResponse.message || 'Failed to fetch courses');
+      }
+
+      // Set platform stats - using same structure as EducatorStudents
+      if (platformResponse) {
+        const payload = platformResponse?.data ?? platformResponse;
+        let allUsers = [];
+        
+        // Handle different response structures
+        if (Array.isArray(payload)) {
+          allUsers = payload;
+        } else if (payload.data && Array.isArray(payload.data)) {
+          allUsers = payload.data;
+        } else {
+          allUsers = payload.students ?? payload.users ?? [];
+        }
+        
+        // Filter users by role
+        const students = allUsers.filter(user => user.role === 'student');
+        const educators = allUsers.filter(user => user.role === 'educator');
+        
+        setPlatformStats({
+          totalStudents: students.length,
+          totalEducators: educators.length
+        });
+        
+        console.log('Platform Stats:', {
+          totalUsers: allUsers.length,
+          totalStudents: students.length,
+          totalEducators: educators.length
+        });
       }
     } catch (err) {
       console.error('Error fetching courses:', err);
@@ -212,8 +269,8 @@ const EducatorAllCourse = () => {
 
   const CourseCard = ({ course }) => (
     <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden hover:border-slate-600/50 transition-all duration-300 group">
-      {/* Course Thumbnail */}
-      <div className="relative h-48 bg-gradient-to-r from-blue-600 to-purple-600">
+      {/* Course Thumbnail - Made shorter */}
+      <div className="relative h-36 bg-gradient-to-r from-blue-600 to-purple-600">
         {course.thumbnail ? (
           <img 
             src={course.thumbnail} 
@@ -223,11 +280,11 @@ const EducatorAllCourse = () => {
         ) : (
           <div className="absolute inset-0 bg-black/20" />
         )}
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-3 left-3">
           <button
             onClick={() => course.isOwnCourse && handleToggleCourse(course.id, course.status)}
             disabled={!course.isOwnCourse}
-            className={`px-3 py-1 backdrop-blur-sm rounded-full text-white text-sm transition-all duration-200 ${
+            className={`px-2 py-1 backdrop-blur-sm rounded-full text-white text-xs transition-all duration-200 ${
               course.isOwnCourse ? 'hover:scale-105' : 'cursor-not-allowed opacity-75'
             } ${
               course.status === 'published' 
@@ -240,111 +297,84 @@ const EducatorAllCourse = () => {
             {course.status}
           </button>
         </div>
-        <div className="absolute top-4 right-4">
-          <div className="flex items-center space-x-1 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
+        <div className="absolute top-3 right-3">
+          <div className="flex items-center space-x-1 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-xs">
             <Star className="w-3 h-3 fill-current text-yellow-400" />
             <span>{course.rating || 0}</span>
           </div>
         </div>
-        <div className="absolute bottom-4 right-4">
+        <div className="absolute bottom-3 right-3">
           {course.isOwnCourse && (
             <button 
               onClick={() => handleDeleteCourse(course.id, course.title)}
-              className="p-2 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-red-600/70 transition-colors"
+              className="p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-red-600/70 transition-colors"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Course Info */}
-      <div className="p-6">
-        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors duration-200">
+      {/* Course Info - Made more compact */}
+      <div className="p-4">
+        <h3 className="text-base font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors duration-200 line-clamp-1">
           {course.title}
         </h3>
         
-        {/* Educator Info */}
-        <div className="flex items-center space-x-2 mb-2">
-          <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+        {/* Educator Info - More compact */}
+        <div className="flex items-center space-x-2 mb-3">
+          <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
             <span className="text-xs text-white font-medium">
-              {course.educator?.name?.charAt(0)?.toUpperCase() || 'E'}
+              {(course.educator?.name || course.instructor || user?.name || 'Unknown')?.charAt(0)?.toUpperCase() || 'E'}
             </span>
           </div>
-          <span className="text-slate-400 text-sm">
-            by {course.educator?.name || 'Unknown Educator'}
+          <span className="text-slate-400 text-xs">
+            by {course.educator?.name || course.instructor || user?.name || 'Unknown Educator'}
           </span>
           {course.isOwnCourse && (
-            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+            <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
               Your Course
             </span>
           )}
         </div>
-        
-        <p className="text-slate-400 text-sm mb-4 line-clamp-2">{course.description}</p>
 
-        {/* Course Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <Users className="w-4 h-4 text-slate-500" />
-            <span className="text-slate-400">Students:</span>
-            <span className="text-white font-medium">{course.students}</span>
+        {/* Course Stats - Made more compact */}
+        <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+          <div className="flex items-center space-x-1">
+            <Users className="w-3 h-3 text-slate-500" />
+            <span className="text-slate-400">{course.students} students</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <DollarSign className="w-4 h-4 text-slate-500" />
-            <span className="text-slate-400">Price:</span>
-            <span className="text-white font-medium">${course.price}</span>
+          <div className="flex items-center space-x-1">
+            <IndianRupee className="w-3 h-3 text-slate-500" />
+            <span className="text-slate-400">₹{course.price}</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <BookOpen className="w-4 h-4 text-slate-500" />
-            <span className="text-slate-400">Lessons:</span>
-            <span className="text-white font-medium">{course.lessons}</span>
+          <div className="flex items-center space-x-1">
+            <BookOpen className="w-3 h-3 text-slate-500" />
+            <span className="text-slate-400">{course.lessons} lessons</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <Clock className="w-4 h-4 text-slate-500" />
-            <span className="text-slate-400">Duration:</span>
-            <span className="text-white font-medium">{course.duration}</span>
+          <div className="flex items-center space-x-1">
+            <Clock className="w-3 h-3 text-slate-500" />
+            <span className="text-slate-400">{course.duration}</span>
           </div>
         </div>
 
-        {/* Revenue Info */}
-        {course.status === 'published' && course.students > 0 && (
-          <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-green-400 text-sm">Total Revenue</span>
-              <span className="text-green-400 font-bold">${(course.students * course.price).toLocaleString()}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex space-x-2 pt-4 border-t border-slate-700">
+        {/* Actions - Always show edit button as enabled */}
+        <div className="flex space-x-2 pt-3 border-t border-slate-700">
           <Link
             to={`/course/${course.id}`}
-            className="flex-1 px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 hover:text-white transition-all duration-200 flex items-center justify-center space-x-2"
+            className="flex-1 px-3 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 hover:text-white transition-all duration-200 flex items-center justify-center space-x-1 text-sm"
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-3 h-3" />
             <span>View</span>
           </Link>
-          {course.isOwnCourse ? (
-            <Link
-              to={`/educator/edit-course/${course.id}`}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2 cursor-pointer hover:scale-105"
-              onClick={() => console.log('Edit button clicked for course:', course.id)}
-            >
-              <Edit className="w-4 h-4" />
-              <span>Edit</span>
-            </Link>
-          ) : (
-            <button
-              disabled
-              title="You can only edit your own courses"
-              className="flex-1 px-4 py-2 bg-slate-600/50 text-slate-500 font-medium rounded-lg cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              <Edit className="w-4 h-4" />
-              <span>Edit</span>
-            </button>
-          )}
+          <Link
+            to={`/educator/edit-course/${course.id}`}
+            className="flex-1 px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-1 cursor-pointer hover:scale-105 text-sm"
+            onClick={() => console.log('Edit button clicked for course:', course.id)}
+          >
+            <Edit className="w-3 h-3" />
+            <span>Edit</span>
+          </Link>
         </div>
       </div>
     </div>
@@ -387,21 +417,50 @@ const EducatorAllCourse = () => {
             </Link>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-white">
-                All Platform Courses
+                {viewType === 'mine' ? 'My Courses' : 'All Platform Courses'}
               </h1>
               <p className="text-slate-300 mt-2">
-                Browse and manage all courses on the platform
+                {viewType === 'mine' 
+                  ? 'Manage your courses (published and unpublished)'
+                  : 'Browse all published courses on the platform'
+                }
               </p>
             </div>
           </div>
 
-          <Link
-            to="/educator/add-course"
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2"
-          >
-            <BookOpen className="w-5 h-5" />
-            <span>Create Course</span>
-          </Link>
+          <div className="flex items-center space-x-3">
+            {/* View Type Toggle */}
+            <div className="flex bg-slate-800 border border-slate-600 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setViewType('mine')}
+                className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  viewType === 'mine' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                My Courses
+              </button>
+              <button
+                onClick={() => setViewType('platform')}
+                className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  viewType === 'platform' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                Platform Courses
+              </button>
+            </div>
+
+            <Link
+              to="/educator/add-course"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2"
+            >
+              <BookOpen className="w-5 h-5" />
+              <span>Create Course</span>
+            </Link>
+          </div>
         </motion.div>
 
         {/* Loading State */}
@@ -422,49 +481,113 @@ const EducatorAllCourse = () => {
               initial="initial"
               animate="animate"
               transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+              className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-8"
             >
               <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-2xl font-bold text-white">{courses.length}</h3>
-                    <p className="text-slate-400 text-sm">Platform Courses</p>
+                    <p className="text-slate-400 text-sm">
+                      {viewType === 'mine' ? 'My Courses' : 'Platform Courses'}
+                    </p>
                   </div>
                   <BookOpen className="w-8 h-8 text-blue-400" />
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.isOwnCourse || false).length}</h3>
-                    <p className="text-slate-400 text-sm">My Courses</p>
+              {viewType === 'mine' ? (
+                <>
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">
+                          {courses.filter(c => c.status === 'published').length}
+                        </h3>
+                        <p className="text-slate-400 text-sm">Published</p>
+                      </div>
+                      <BookOpen className="w-8 h-8 text-green-400" />
+                    </div>
                   </div>
-                  <BookOpen className="w-8 h-8 text-blue-400" />
-                </div>
-              </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">{courses.filter(c => !c.isOwnCourse || false).length}</h3>
-                    <p className="text-slate-400 text-sm">Other Courses</p>
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">
+                          {courses.filter(c => c.status === 'draft').length}
+                        </h3>
+                        <p className="text-slate-400 text-sm">Draft</p>
+                      </div>
+                      <Users className="w-8 h-8 text-yellow-400" />
+                    </div>
                   </div>
-                  <Users className="w-8 h-8 text-green-400" />
-                </div>
-              </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">
-                      {courses.reduce((sum, course) => sum + (course.students || 0), 0)}
-                    </h3>
-                    <p className="text-slate-400 text-sm">Platform Students</p>
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">
+                          {courses.reduce((sum, course) => sum + (course.students || 0), 0)}
+                        </h3>
+                        <p className="text-slate-400 text-sm">My Students</p>
+                      </div>
+                      <Users className="w-8 h-8 text-purple-400" />
+                    </div>
                   </div>
-                  <Users className="w-8 h-8 text-purple-400" />
-                </div>
-              </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">
+                          ₹{courses.reduce((sum, course) => sum + (course.students * course.price || 0), 0).toLocaleString('en-IN')}
+                        </h3>
+                        <p className="text-slate-400 text-sm">Total Revenue</p>
+                      </div>
+                      <Users className="w-8 h-8 text-orange-400" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">{courses.filter(c => c.isOwnCourse || false).length}</h3>
+                        <p className="text-slate-400 text-sm">My Courses</p>
+                      </div>
+                      <BookOpen className="w-8 h-8 text-green-400" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">{courses.filter(c => !c.isOwnCourse || false).length}</h3>
+                        <p className="text-slate-400 text-sm">Other Courses</p>
+                      </div>
+                      <Users className="w-8 h-8 text-yellow-400" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">{platformStats.totalStudents}</h3>
+                        <p className="text-slate-400 text-sm">Platform Students</p>
+                      </div>
+                      <Users className="w-8 h-8 text-purple-400" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-white">{platformStats.totalEducators}</h3>
+                        <p className="text-slate-400 text-sm">Platform Educators</p>
+                      </div>
+                      <Users className="w-8 h-8 text-orange-400" />
+                    </div>
+                  </div>
+                </>
+              )}
             </motion.div>
 
         {/* Filters and Search */}

@@ -335,7 +335,7 @@ const EducatorStudents = () => {
           </div>
         </motion.div>
 
-        {/* Students Grid */}
+        {/* Students Table */}
         <motion.div
           variants={fadeInUp}
           initial="initial"
@@ -351,53 +351,40 @@ const EducatorStudents = () => {
               <p className="text-slate-400">Try adjusting your search or filters</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedStudents.map((student) => (
-                <StudentCard key={student.id} student={student} />
-              ))}
+            <div className="overflow-x-auto bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4">
+              <table className="min-w-full text-left">
+                <thead>
+                  <tr className="text-slate-400 text-sm border-b border-slate-700/40">
+                    <th className="py-3 px-3">Student</th>
+                    <th className="py-3 px-3">Name</th>
+                    <th className="py-3 px-3">Email</th>
+                    <th className="py-3 px-3">Enrolled Course</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedStudents.map(student => (
+                    <tr key={student.id} className="hover:bg-slate-900/30 transition-colors">
+                      <td className="py-3 px-3 align-middle">
+                        {student.avatar ? (
+                          <img src={student.avatar} alt={student.name} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                            { (student.name || '?').split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase() }
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 align-middle text-white">{student.name}</td>
+                      <td className="py-3 px-3 align-middle text-slate-400 text-sm">{student.email}</td>
+                      <td className="py-3 px-3 align-middle text-slate-300 text-sm">{student.courseName || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </motion.div>
 
-        {/* Quick Actions */}
-        {students.length > 0 && (
-          <motion.div
-            variants={fadeInUp}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.7 }}
-            className="mt-8"
-          >
-            <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Quick Actions</h3>
-              
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <button className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300 group">
-                  <Mail className="w-5 h-5 text-blue-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">Send Newsletter</span>
-                </button>
-                
-                <button className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-green-500/50 hover:bg-green-500/5 transition-all duration-300 group">
-                  <Award className="w-5 h-5 text-green-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">Award Certificates</span>
-                </button>
-                
-                <button className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-purple-500/50 hover:bg-purple-500/5 transition-all duration-300 group">
-                  <MessageCircle className="w-5 h-5 text-purple-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">Bulk Message</span>
-                </button>
-                
-                <Link
-                  to="/educator/analytics"
-                  className="flex items-center space-x-3 p-4 bg-slate-900/30 border border-slate-700 rounded-xl hover:border-yellow-500/50 hover:bg-yellow-500/5 transition-all duration-300 group"
-                >
-                  <TrendingUp className="w-5 h-5 text-yellow-400" />
-                  <span className="text-slate-300 group-hover:text-white transition-colors">View Analytics</span>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
+        
       </div>
     </div>
   );

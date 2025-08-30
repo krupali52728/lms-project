@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   BookOpen, 
   Clock, 
@@ -24,6 +25,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('grid');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,6 +94,13 @@ const StudentDashboard = () => {
       }
     } catch (error) {
       console.error('Enrollment error:', error);
+    }
+  };
+
+  // Navigate to course learning page
+  const handleStartLearning = (courseId) => {
+    if (courseId) {
+      navigate(`/course/${courseId}/learn`);
     }
   };
 
@@ -356,7 +365,10 @@ const StudentDashboard = () => {
                             </div>
                           </div>
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <button className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors duration-200 hover:scale-110">
+                            <button 
+                              className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-colors duration-200 hover:scale-110"
+                              onClick={() => handleStartLearning(course.id)}
+                            >
                               <Play className="w-6 h-6 text-white ml-0.5" />
                             </button>
                           </div>
@@ -403,7 +415,7 @@ const StudentDashboard = () => {
                           {/* Action Button */}
                           <button 
                             className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center space-x-2"
-                            onClick={() => handleEnrollCourse(course.id)}
+                            onClick={() => handleStartLearning(course.id)}
                           >
                             <Play className="w-4 h-4" />
                             <span>{course.isCompleted ? 'Review Course' : 'Continue Learning'}</span>
@@ -426,7 +438,9 @@ const StudentDashboard = () => {
                             </div>
                           )}
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Play className="w-4 h-4 text-white" />
+                            <button onClick={() => handleStartLearning(course.id)}>
+                              <Play className="w-4 h-4 text-white" />
+                            </button>
                           </div>
                         </div>
 
@@ -462,7 +476,7 @@ const StudentDashboard = () => {
                           </div>
                           <button 
                             className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 text-sm"
-                            onClick={() => handleEnrollCourse(course.id)}
+                            onClick={() => handleStartLearning(course.id)}
                           >
                             {course.isCompleted ? 'Review' : 'Continue'}
                           </button>
