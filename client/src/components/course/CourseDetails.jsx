@@ -19,6 +19,8 @@ import { getCourseById } from '../../Api/courseApi.js';
 import { checkCoursePurchase } from '../../Api/userApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import StripeCheckoutButton from '../Payment/StripeCheckoutButton';
+import Rating from '../Student/Rating.jsx';
+import ReviewsList from './ReviewsList.jsx';
 import './CourseDetails.css';
 
 const CourseDetails = () => {
@@ -36,6 +38,8 @@ const CourseDetails = () => {
     hasPurchased: false,
     loading: true
   });
+  const [userRating, setUserRating] = useState(null);
+  const [showRatingForm, setShowRatingForm] = useState(false);
 
 
 
@@ -47,7 +51,15 @@ const CourseDetails = () => {
       
       if (response.success && response.course) {
         setCourse(response.course);
-        console.log("Course details set:", response.course);  
+        console.log("Course details set:", response.course);
+        
+        // Check if user has already rated this course
+        if (isLoggedIn && user && response.course.ratings) {
+          const existingRating = response.course.ratings.find(
+            rating => rating.user && rating.user._id === user._id
+          );
+          setUserRating(existingRating || null);
+        }
       } else {
         throw new Error(response.message || "Failed to fetch course details");
       }
@@ -57,6 +69,35 @@ const CourseDetails = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRatingSubmitted = async (newRatingData) => {
+    // Refresh course data to get updated ratings
+    await fetchCourseDetails();
+    setShowRatingForm(false);
+    
+    // Show success message or handle UI updates
+    console.log('Rating submitted successfully:', newRatingData);
+  };
+
+  const getUserRatingInfo = () => {
+    if (!course?.ratings || !user) return { rating: 0, review: '' };
+    
+    const userRatingObj = course.ratings.find(
+      rating => rating.user && (rating.user._id === user._id || rating.user === user._id)
+    );
+    
+    return {
+      rating: userRatingObj?.rating || 0,
+      review: userRatingObj?.review || ''
+    };
+  };
+
+  const calculateAverageRating = () => {
+    if (!course?.ratings || course.ratings.length === 0) return 0;
+    
+    const sum = course.ratings.reduce((acc, rating) => acc + (rating.rating || 0), 0);
+    return sum / course.ratings.length;
   };
 
   const checkPurchaseStatus = async () => {
@@ -105,6 +146,16 @@ const CourseDetails = () => {
   useEffect(() => {
     checkPurchaseStatus();
   }, [courseId, isLoggedIn, user]);
+
+  // Update user rating when course data changes
+  useEffect(() => {
+    if (course && isLoggedIn && user) {
+      const existingRating = course.ratings?.find(
+        rating => rating.user && (rating.user._id === user._id || rating.user === user._id)
+      );
+      setUserRating(existingRating || null);
+    }
+  }, [course, isLoggedIn, user]);
 
   const handleExplore = () => {
     if (course && purchaseStatus.isEnrolled) {
@@ -277,11 +328,11 @@ const CourseDetails = () => {
                   <div className="flex items-center space-x-1">
                     <div className="flex text-yellow-400">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-3 h-3 md:w-4 md:h-4 ${i < Math.floor(course.rating || 4) ? 'fill-current' : ''}`} />
+                        <Star key={i} className={`w-3 h-3 md:w-4 md:h-4 ${i < Math.floor(calculateAverageRating()) ? 'fill-current' : ''}`} />
                       ))}
                     </div>
-                    <span className="ml-1 text-xs md:text-sm">{course.rating || '4.0'}</span>
-                    <span className="text-slate-400 text-xs md:text-sm hidden sm:inline">({course.reviews?.length || 0} reviews)</span>
+                    <span className="ml-1 text-xs md:text-sm">{calculateAverageRating().toFixed(1)}</span>
+                    <span className="text-slate-400 text-xs md:text-sm hidden sm:inline">({course.ratings?.length || 0} reviews)</span>
                   </div>
                   
                   <div className="flex items-center space-x-1">
@@ -454,35 +505,61 @@ const CourseDetails = () => {
               )}
 
               {activeTab === 'reviews' && (
-                <div className="space-y-4">
-                  <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">Student Reviews</h3>
-                  {course.reviews && course.reviews.length > 0 ? (
-                    <div className="space-y-4">
-                      {course.reviews.map((review, i) => (
-                        <div key={i} className="border-b border-slate-700 pb-4">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex-shrink-0"></div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
-                                <span className="text-white font-medium text-sm md:text-base">{review.studentName}</span>
-                                <div className="flex text-yellow-400">
-                                  {[...Array(5)].map((_, j) => (
-                                    <Star key={j} className={`w-3 h-3 md:w-4 md:h-4 ${j < review.rating ? 'fill-current' : ''}`} />
-                                  ))}
-                                </div>
-                              </div>
-                              <p className="text-slate-300 text-sm md:text-base">
-                                {review.comment}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h3 className="text-lg md:text-xl font-semibold text-white">Student Reviews</h3>
+                    
+                    {/* Rating Button - Only show if user is enrolled */}
+                    {isLoggedIn && purchaseStatus.isEnrolled && (
+                      <button
+                        onClick={() => setShowRatingForm(!showRatingForm)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+                      >
+                        {userRating ? 'Update Rating' : 'Rate Course'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Rating Form */}
+                  {showRatingForm && isLoggedIn && purchaseStatus.isEnrolled && (
+                    <div className="mb-6">
+                      <Rating
+                        courseId={courseId}
+                        existingRating={getUserRatingInfo().rating}
+                        existingReview={getUserRatingInfo().review}
+                        onRatingSubmitted={handleRatingSubmitted}
+                      />
                     </div>
-                  ) : (
-                    <div className="text-center py-6 md:py-8 text-slate-400">
-                      <Star className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-3 opacity-50" />
-                      <p className="text-sm md:text-base">No reviews yet</p>
+                  )}
+
+                  {/* Reviews List */}
+                  <ReviewsList 
+                    reviews={course.ratings || []}
+                    courseRating={calculateAverageRating()}
+                    totalRatings={course.ratings?.length || 0}
+                  />
+                  
+                  {/* Message for non-enrolled users */}
+                  {isLoggedIn && !purchaseStatus.isEnrolled && (
+                    <div className="bg-blue-900/20 border border-blue-500/20 rounded-lg p-4 mt-6">
+                      <p className="text-blue-400 text-sm text-center">
+                        Enroll in this course to leave a rating and review
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Message for non-logged users */}
+                  {!isLoggedIn && (
+                    <div className="bg-slate-700/30 border border-slate-600/30 rounded-lg p-4 mt-6">
+                      <p className="text-slate-400 text-sm text-center">
+                        <button
+                          onClick={() => navigate('/login')}
+                          className="text-blue-400 hover:text-blue-300 underline"
+                        >
+                          Log in
+                        </button>
+                        {' '}to view all reviews and ratings
+                      </p>
                     </div>
                   )}
                 </div>
@@ -550,10 +627,10 @@ const CourseDetails = () => {
                     <div className="flex items-center space-x-2">
                       <div className="flex text-yellow-400">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-3 h-3 md:w-4 md:h-4 ${i < Math.floor(course.rating || 4) ? 'fill-current' : ''}`} />
+                          <Star key={i} className={`w-3 h-3 md:w-4 md:h-4 ${i < Math.floor(calculateAverageRating()) ? 'fill-current' : ''}`} />
                         ))}
                       </div>
-                      <span className="text-slate-300 text-xs md:text-sm">({course.reviews?.length || 0} reviews)</span>
+                      <span className="text-slate-300 text-xs md:text-sm">({course.ratings?.length || 0} reviews)</span>
                     </div>
                   </div>
 

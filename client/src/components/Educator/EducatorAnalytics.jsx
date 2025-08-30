@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -17,21 +17,21 @@ import {
   Eye,
   Clock,
   Target,
-  Award
+  Award,
+  Loader,
+  AlertCircle
 } from 'lucide-react';
 
+import { getEducatorAnalytics } from '../../Api/courseApi.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+
 const EducatorAnalytics = () => {
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState('30d');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
-
-  const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 }
-  };
-
-  // Placeholder data - replace with your backend data
-  const analyticsData = {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [analyticsData, setAnalyticsData] = useState({
     overview: {
       totalRevenue: 0,
       totalStudents: 0,
@@ -51,6 +51,42 @@ const EducatorAnalytics = () => {
       dropoffRate: 0,
       satisfactionScore: 0
     }
+  });
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await getEducatorAnalytics(timeRange);
+      if (response.success) {
+        setAnalyticsData(response.data);
+      } else {
+        setError(response.message || 'Failed to fetch analytics');
+      }
+    } catch (err) {
+      console.error('Analytics fetch error:', err);
+      setError(err.message || 'Failed to fetch analytics data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [timeRange]);
+
+  const handleRefresh = () => {
+    fetchAnalytics();
+  };
+
+  const handleTimeRangeChange = (newTimeRange) => {
+    setTimeRange(newTimeRange);
+  };
+
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6 }
   };
 
   const StatCard = ({ title, value, change, icon: Icon, color, prefix = '', suffix = '' }) => (
@@ -132,8 +168,9 @@ const EducatorAnalytics = () => {
           <div className="flex items-center space-x-3">
             <select
               value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
+              onChange={(e) => handleTimeRangeChange(e.target.value)}
               className="px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              disabled={loading}
             >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
@@ -141,29 +178,78 @@ const EducatorAnalytics = () => {
               <option value="1y">Last year</option>
             </select>
             
-            <button className="p-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-400 hover:text-white hover:border-slate-500 transition-colors">
-              <RefreshCw className="w-5 h-5" />
+            <button 
+              onClick={handleRefresh}
+              disabled={loading}
+              className="p-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-400 hover:text-white hover:border-slate-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
             
-            <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2">
+            <button 
+              disabled={loading}
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Download className="w-4 h-4" />
               <span>Export</span>
             </button>
           </div>
         </motion.div>
 
-        {analyticsData.overview.totalCourses === 0 ? (
-          <EmptyAnalytics />
-        ) : (
-          <>
-            {/* Overview Stats */}
-            <motion.div
-              variants={fadeInUp}
-              initial="initial"
-              animate="animate"
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        {/* Loading State */}
+        {loading && (
+          <motion.div
+            variants={fadeInUp}
+            initial="initial"
+            animate="animate"
+            className="flex items-center justify-center py-16"
+          >
+            <div className="text-center">
+              <Loader className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
+              <p className="text-slate-400">Loading analytics data...</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <motion.div
+            variants={fadeInUp}
+            initial="initial"
+            animate="animate"
+            className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 mb-8"
+          >
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-red-400" />
+              <div>
+                <h3 className="text-red-400 font-medium">Failed to load analytics</h3>
+                <p className="text-slate-300 mt-1">{error}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
+              Try Again
+            </button>
+          </motion.div>
+        )}
+
+        {/* Main Content */}
+        {!loading && !error && (
+          <>
+            {analyticsData.overview.totalCourses === 0 ? (
+              <EmptyAnalytics />
+            ) : (
+              <>
+                {/* Overview Stats */}
+                <motion.div
+                  variants={fadeInUp}
+                  initial="initial"
+                  animate="animate"
+                  transition={{ delay: 0.2 }}
+                  className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                >
               <StatCard
                 title="Total Revenue"
                 value={analyticsData.overview.totalRevenue.toLocaleString()}
@@ -223,12 +309,46 @@ const EducatorAnalytics = () => {
                   </div>
                 </div>
                 
-                <div className="h-80 flex items-center justify-center">
-                  <div className="text-center">
-                    <BarChart3 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                    <p className="text-slate-400">Chart visualization will appear here</p>
-                    <p className="text-slate-500 text-sm mt-2">Connect your analytics data to see trends</p>
-                  </div>
+                <div className="h-80">
+                  {analyticsData.chartData && analyticsData.chartData.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="text-sm text-slate-400 mb-4">
+                        Revenue trend for the last {timeRange}
+                      </div>
+                      {/* Simple chart representation */}
+                      <div className="grid grid-cols-7 gap-2 h-64">
+                        {analyticsData.chartData.map((data, index) => {
+                          const maxRevenue = Math.max(...analyticsData.chartData.map(d => d.revenue));
+                          const height = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
+                          return (
+                            <div key={index} className="flex flex-col items-center">
+                              <div className="flex-1 flex items-end">
+                                <div 
+                                  className="w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-t-sm min-h-[4px]"
+                                  style={{ height: `${height}%` }}
+                                  title={`$${data.revenue} on ${data.date}`}
+                                />
+                              </div>
+                              <div className="text-xs text-slate-500 mt-2 text-center">
+                                {data.date.split('/')[1]}/{data.date.split('/')[2]}
+                              </div>
+                              <div className="text-xs text-slate-400 font-medium">
+                                ${data.revenue}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <BarChart3 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                        <p className="text-slate-400">No chart data available yet</p>
+                        <p className="text-slate-500 text-sm mt-2">Chart will appear when you have course sales</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -395,7 +515,9 @@ const EducatorAnalytics = () => {
                 </button>
               </div>
             </motion.div>
-          </>
+            </>
+          )}
+        </>
         )}
       </div>
     </div>

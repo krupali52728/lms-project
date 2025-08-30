@@ -173,12 +173,15 @@ export const getCourseById = async (req, res) => {
           path: "chapterContent",
           model: "Lecture"
         }
+      })
+      .populate({
+        path: "ratings.user",
+        select: "name avatar"
       });
 
     if (!course) {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
-
 
     res.status(200).json({ success: true, course });
   } catch (error) {
@@ -362,5 +365,159 @@ export const searchCourses = async(req,res)=>{
   } catch (error) {
    res.status(500).json({ success: false, message: error.message }); 
    console.log("Search courses error:", error.message);
+  }
+}
+
+// Get educator analytics
+export const getEducatorAnalytics = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { timeRange = '30d' } = req.query;
+
+    // Calculate date range
+    let startDate = new Date();
+    switch (timeRange) {
+      case '7d':
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(startDate.getDate() - 90);
+        break;
+      case '1y':
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        break;
+      default:
+        startDate.setDate(startDate.getDate() - 30);
+    }
+
+    // Get educator's courses
+    const courses = await Course.find({ educator: userId })
+      .populate("chapters")
+      .select('_id title price isPublished createdAt enrolledStudents');
+
+    // Get purchases for educator's courses
+    const courseIds = courses.map(course => course._id);
+    const purchases = await Purchase.find({
+      course: { $in: courseIds },
+      purchaseDate: { $gte: startDate }
+    }).populate('course', 'title price').populate('user', 'name email');
+
+    // Get all-time purchases for comparison
+    const allTimePurchases = await Purchase.find({
+      course: { $in: courseIds }
+    }).populate('course', 'title price');
+
+    // Calculate metrics
+    const totalRevenue = allTimePurchases.reduce((sum, purchase) => sum + purchase.price, 0);
+    const periodRevenue = purchases.reduce((sum, purchase) => sum + purchase.price, 0);
+    
+    const totalStudents = [...new Set(allTimePurchases.map(p => p.user.toString()))].length;
+    const periodStudents = [...new Set(purchases.map(p => p.user.toString()))].length;
+    
+    const totalCourses = courses.length;
+    const publishedCourses = courses.filter(c => c.isPublished).length;
+
+    // Calculate average rating (placeholder for now since we don't have ratings model)
+    const avgRating = 4.5; // This should come from actual ratings when implemented
+
+    // Calculate percentage changes (simplified)
+    const revenueChange = periodRevenue > 0 ? 15 : 0; // Placeholder calculation
+    const studentsChange = periodStudents > 0 ? 12 : 0; // Placeholder calculation
+    const coursesChange = 0; // Courses created in period vs previous period
+    const ratingChange = 0.2; // Placeholder
+
+    // Get top performing courses
+    const courseRevenue = {};
+    allTimePurchases.forEach(purchase => {
+      const courseId = purchase.course._id.toString();
+      if (!courseRevenue[courseId]) {
+        courseRevenue[courseId] = {
+          id: courseId,
+          title: purchase.course.title,
+          revenue: 0,
+          students: new Set()
+        };
+      }
+      courseRevenue[courseId].revenue += purchase.price;
+      courseRevenue[courseId].students.add(purchase.user.toString());
+    });
+
+    const topCourses = Object.values(courseRevenue)
+      .map(course => ({
+        ...course,
+        students: course.students.size
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    // Generate recent activity
+    const recentActivity = purchases
+      .slice(-10)
+      .reverse()
+      .map(purchase => ({
+        description: `New enrollment in "${purchase.course.title}"`,
+        time: purchase.purchaseDate.toLocaleDateString(),
+        type: 'enrollment'
+      }));
+
+    // Student engagement metrics (simplified)
+    const studentEngagement = {
+      completionRate: 75, // Placeholder - should calculate from course progress
+      avgTimeSpent: 3.5, // Placeholder - should calculate from user activity
+      dropoffRate: 15, // Placeholder - should calculate from incomplete courses
+      satisfactionScore: avgRating
+    };
+
+    // Generate chart data for revenue trends
+    const chartData = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dayRevenue = purchases
+        .filter(p => {
+          const pDate = new Date(p.purchaseDate);
+          return pDate.toDateString() === date.toDateString();
+        })
+        .reduce((sum, p) => sum + p.price, 0);
+      
+      chartData.push({
+        date: date.toLocaleDateString(),
+        revenue: dayRevenue,
+        students: purchases.filter(p => {
+          const pDate = new Date(p.purchaseDate);
+          return pDate.toDateString() === date.toDateString();
+        }).length
+      });
+    }
+
+    const analyticsData = {
+      overview: {
+        totalRevenue,
+        totalStudents,
+        totalCourses: publishedCourses,
+        avgRating,
+        revenueChange,
+        studentsChange,
+        coursesChange,
+        ratingChange
+      },
+      chartData,
+      topCourses,
+      recentActivity,
+      studentEngagement,
+      timeRange
+    };
+
+    res.status(200).json({
+      success: true,
+      data: analyticsData
+    });
+
+  } catch (error) {
+    console.error('Analytics error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 }

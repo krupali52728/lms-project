@@ -10,7 +10,8 @@ import {
   enrollInCourse,
   checkPurchaseStatus,
   updateCourse,
-  searchCourses
+  searchCourses,
+  getEducatorAnalytics
 } from '../controllers/course.controllers.js';
 
 const courseRouter = express.Router();
@@ -21,7 +22,8 @@ courseRouter.get('/search', searchCourses);
 
 // Protected routes (authentication required)
 courseRouter.post('/create', authenticate, authorize('educator'), createCourse); 
-courseRouter.get('/my-courses', authenticate, authorize('educator'), getCourseEducator); 
+courseRouter.get('/my-courses', authenticate, authorize('educator'), getCourseEducator);
+courseRouter.get('/analytics', authenticate, authorize('educator'), getEducatorAnalytics); 
 
 // Routes with courseId parameter - more specific routes first
 courseRouter.patch('/:courseId/update', authenticate, authorize('educator'), updateCourse);

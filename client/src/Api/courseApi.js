@@ -126,3 +126,14 @@ export const searchCourses = async (query, filters = {}) => {
         throw error.response?.data || { message: "Something went wrong" };
     }
 }
+
+// Get educator analytics
+export const getEducatorAnalytics = async (timeRange = '30d') => {
+    try {
+        const res = await api.get(`course/analytics?timeRange=${timeRange}`);
+        return res.data;
+    } catch (error) {
+        console.log("Get educator analytics error:", error.response?.data || error.message);
+        throw error.response?.data || { message: "Something went wrong" };
+    }
+}

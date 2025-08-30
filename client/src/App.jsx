@@ -74,7 +74,7 @@ function App() {
                   <Route path="/verify-otp" element={<OTPVerification />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/course/:id" element={<CourseDetails />} />
-                  <Route path="/course" element={<Search />} /> {/* Redirect to search if no course ID */}
+                  <Route path="/course" element={<Search />} /> 
                   <Route path="/payment/success" element={<PaymentSuccess />} />
                   <Route path="*" element={<NotFound />} />
                   

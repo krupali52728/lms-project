@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search as SearchIcon, 
-  Filter, 
   Clock,
   Star,
   Users,
   BookOpen,
   X,
-  TrendingUp,
   Loader
 } from 'lucide-react';
 import {searchCourses} from '../../Api/courseApi.js';
@@ -17,25 +15,13 @@ import {searchCourses} from '../../Api/courseApi.js';
 const Search = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedLevel, setSelectedLevel] = useState('All');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState(null);
 
-  const categories = [
-    'All',
-    'Web Development',
-    'Data Science',
-    'Mobile Development',
-    'Design',
-    'Marketing',
-    'Business'
-  ];
-
-  const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+  
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -46,12 +32,7 @@ const Search = () => {
     setHasSearched(true);
 
     try {
-      const filters = {
-        category: selectedCategory,
-        level: selectedLevel
-      };
-      
-      const response = await searchCourses(searchTerm.trim(), filters);
+  const response = await searchCourses(searchTerm.trim());
       setSearchResults(response.data || []);
     } catch (error) {
       console.error('Search error:', error);
@@ -69,12 +50,7 @@ const Search = () => {
     setHasSearched(true);
 
     try {
-      const filters = {
-        category: selectedCategory,
-        level: selectedLevel
-      };
-      
-      const response = await searchCourses(term, filters);
+    const response = await searchCourses(term);
       setSearchResults(response.data || []);
     } catch (error) {
       console.error('Search error:', error);
@@ -84,22 +60,7 @@ const Search = () => {
       setIsLoading(false);
     }
   };
-
-  // Re-search when filters change and there's already a search term
-  useEffect(() => {
-    if (searchTerm.trim() && hasSearched) {
-      handleSearch({ preventDefault: () => {} });
-    }
-  }, [selectedCategory, selectedLevel]);
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedCategory('All');
-    setSelectedLevel('All');
-    setSearchResults([]);
-    setHasSearched(false);
-    setError(null);
-  };
+  
 
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
@@ -156,14 +117,6 @@ const Search = () => {
               </div>
               
               <button
-                type="button"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="p-4 text-slate-400 hover:text-white transition-colors duration-200 mr-2"
-              >
-                <Filter className="w-6 h-6" />
-              </button>
-              
-              <button
                 type="submit"
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
               >
@@ -172,79 +125,7 @@ const Search = () => {
             </div>
           </form>
 
-          {/* Filters Panel */}
-          {isFilterOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mt-6 bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-2xl"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white">Filters</h3>
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={clearFilters}
-                    className="text-blue-400 hover:text-blue-300 transition-colors duration-200 text-sm"
-                  >
-                    Clear All
-                  </button>
-                  <button
-                    onClick={() => setIsFilterOpen(false)}
-                    className="text-slate-400 hover:text-white transition-colors duration-200"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Category Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-3">
-                    Category
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {categories.map((category) => (
-                      <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`p-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          selectedCategory === category
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white'
-                        }`}
-                      >
-                        {category}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Level Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-3">
-                    Difficulty Level
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {levels.map((level) => (
-                      <button
-                        key={level}
-                        onClick={() => setSelectedLevel(level)}
-                        className={`p-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          selectedLevel === level
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white'
-                        }`}
-                      >
-                        {level}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          {/* Filters removed per user request */}
         </motion.div>
 
         {/* Popular Searches */}
@@ -332,7 +213,7 @@ const Search = () => {
               <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-12">
                 <SearchIcon className="w-16 h-16 text-slate-500 mx-auto mb-4" />
                 <h3 className="text-2xl font-semibold text-slate-400 mb-2">Start Your Search</h3>
-                <p className="text-slate-500">Enter a keyword or select filters to find the perfect course for you</p>
+                <p className="text-slate-500">Enter a keyword to find the perfect course for you</p>
               </div>
             </div>
           )}
