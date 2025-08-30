@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticate, authorize } from '../middleware/authMiddleaare.js';
+import { upload } from '../config/multer.js';
 import {
   createLecture,
   getLecturesByChapter,
@@ -21,7 +22,7 @@ lectureRouter.get('/:lectureId', getLectureById);
 lectureRouter.get('/access/:lectureId', authenticate, getLectureWithAccess);
 
 // Protected routes (educators only)
-lectureRouter.post('/:courseId/:chapterId', authenticate, authorize('educator'), createLecture); 
+lectureRouter.post('/:courseId/:chapterId', authenticate, authorize('educator'), upload.single('video'), createLecture); 
 lectureRouter.delete('/:lectureId', authenticate, authorize('educator'), deleteLecture); 
 lectureRouter.put('/reorder/:chapterId', authenticate, authorize('educator'), reorderLectures); 
 

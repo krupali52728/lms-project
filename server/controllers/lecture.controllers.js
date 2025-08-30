@@ -2,13 +2,47 @@ import Course from "../model/course.model.js";
 import Chapter from "../model/chapter.model.js";
 import Lecture from "../model/lecture.model.js";
 import User from "../model/user.model.js";
+import { uploadVideoToCloudinary } from "../config/multer.js";
 
 // Create a new lecture
 export const createLecture = async (req, res) => {
+  console.log('=== LECTURE CREATION DEBUG ===');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('File:', req.file);
+  console.log('Params:', req.params);
+  console.log('Content-Type:', req.get('Content-Type'));
+  
   try {
     const { courseId, chapterId } = req.params;
-    const { title, videoUrl, duration, order } = req.body;
+    
+    // Handle the case where multer processes the fields
+    const title = req.body?.title || '';
+    const description = req.body?.description || '';
+    const content = req.body?.content || '';
+    const duration = parseInt(req.body?.duration) || 0;
+    const order = parseInt(req.body?.order) || 1;
+    
     const { userId } = req.user;
+
+    console.log('Extracted data:', { title, description, content, duration, order });
+
+    // Validate required fields
+    if (!title || !title.trim()) {
+      console.log('Title validation failed:', title);
+      return res.status(400).json({
+        success: false,
+        message: "Lecture title is required"
+      });
+    }
+
+    if (!req.file) {
+      console.log('File validation failed:', req.file);
+      return res.status(400).json({
+        success: false,
+        message: "Video file is required"
+      });
+    }
 
     // Verify course exists and user is the educator
     const course = await Course.findById(courseId);
@@ -35,10 +69,26 @@ export const createLecture = async (req, res) => {
         .json({ success: false, message: "Chapter not found in this course" });
     }
 
+    // Handle video upload if provided
+    let videoUrl = '';
+    if (req.file) {
+      try {
+        const fileName = `lecture_${courseId}_${chapterId}_${Date.now()}`;
+        const uploadResult = await uploadVideoToCloudinary(req.file.buffer, fileName);
+        videoUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        console.error('Video upload error:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload video file"
+        });
+      }
+    }
+
     // Check if lecture order already exists in this chapter
     const existingLecture = await Lecture.findOne({
       chapter: chapterId,
-      order,
+      order: order,
     });
     if (existingLecture) {
       return res
@@ -53,10 +103,12 @@ export const createLecture = async (req, res) => {
     const lecture = new Lecture({
       course: courseId,
       chapter: chapterId,
-      title,
+      title: title.trim(),
+      description: description,
+      content: content,
       videoUrl,
-      duration,
-      order,
+      duration: duration,
+      order: order,
     });
 
     await lecture.save();
@@ -71,6 +123,7 @@ export const createLecture = async (req, res) => {
 
     res.status(201).json({ success: true, lecture });
   } catch (error) {
+    console.error('Create lecture error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
