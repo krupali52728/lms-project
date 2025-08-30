@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search as SearchIcon, 
   Filter, 
@@ -8,14 +9,21 @@ import {
   Users,
   BookOpen,
   X,
-  TrendingUp
+  TrendingUp,
+  Loader
 } from 'lucide-react';
+import {searchCourses} from '../../Api/courseApi.js';
 
 const Search = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState(null);
 
   const categories = [
     'All',
@@ -29,15 +37,68 @@ const Search = () => {
 
   const levels = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchTerm, 'Category:', selectedCategory, 'Level:', selectedLevel);
+    if (!searchTerm.trim()) return;
+
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+
+    try {
+      const filters = {
+        category: selectedCategory,
+        level: selectedLevel
+      };
+      
+      const response = await searchCourses(searchTerm.trim(), filters);
+      setSearchResults(response.data || []);
+    } catch (error) {
+      console.error('Search error:', error);
+      setError(error.message || 'Failed to search courses');
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handlePopularSearch = async (term) => {
+    setSearchTerm(term);
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+
+    try {
+      const filters = {
+        category: selectedCategory,
+        level: selectedLevel
+      };
+      
+      const response = await searchCourses(term, filters);
+      setSearchResults(response.data || []);
+    } catch (error) {
+      console.error('Search error:', error);
+      setError(error.message || 'Failed to search courses');
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Re-search when filters change and there's already a search term
+  useEffect(() => {
+    if (searchTerm.trim() && hasSearched) {
+      handleSearch({ preventDefault: () => {} });
+    }
+  }, [selectedCategory, selectedLevel]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('All');
     setSelectedLevel('All');
+    setSearchResults([]);
+    setHasSearched(false);
+    setError(null);
   };
 
   const fadeInUp = {
@@ -200,7 +261,7 @@ const Search = () => {
               {['JavaScript', 'Python', 'React', 'Data Science', 'UI/UX Design', 'Machine Learning'].map((tag) => (
                 <button
                   key={tag}
-                  onClick={() => setSearchTerm(tag)}
+                  onClick={() => handlePopularSearch(tag)}
                   className="px-6 py-3 bg-slate-800/50 border border-slate-600/50 rounded-full text-slate-300 hover:text-white hover:border-slate-500/50 transition-all duration-200"
                 >
                   {tag}
@@ -210,63 +271,216 @@ const Search = () => {
           </div>
         </motion.div>
 
-        {/* Search Stats */}
-        <motion.div
-          variants={fadeInUp}
-          initial="initial"
-          animate="animate"
-          transition={{ delay: 0.6 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
-        >
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-blue-600/20 to-blue-700/20 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-6">
-              <BookOpen className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-white mb-1">500+</div>
-              <div className="text-slate-400 text-sm">Courses Available</div>
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-purple-600/20 to-purple-700/20 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6">
-              <Users className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-white mb-1">50K+</div>
-              <div className="text-slate-400 text-sm">Active Students</div>
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-green-600/20 to-green-700/20 backdrop-blur-sm border border-green-500/20 rounded-2xl p-6">
-              <Star className="w-8 h-8 text-green-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-white mb-1">4.9</div>
-              <div className="text-slate-400 text-sm">Average Rating</div>
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-yellow-600/20 to-yellow-700/20 backdrop-blur-sm border border-yellow-500/20 rounded-2xl p-6">
-              <TrendingUp className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
-              <div className="text-2xl font-bold text-white mb-1">95%</div>
-              <div className="text-slate-400 text-sm">Completion Rate</div>
-            </div>
-          </div>
-        </motion.div>
+     
 
-        {/* Search Results Placeholder */}
+        {/* Search Results */}
         <motion.div
           variants={fadeInUp}
           initial="initial"
           animate="animate"
           transition={{ delay: 0.8 }}
-          className="mt-16 text-center"
+          className="mt-16"
         >
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-12">
-            <SearchIcon className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-            <h3 className="text-2xl font-semibold text-slate-400 mb-2">Start Your Search</h3>
-            <p className="text-slate-500">Enter a keyword or select filters to find the perfect course for you</p>
-          </div>
+          {isLoading ? (
+            <div className="text-center">
+              <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-12">
+                <Loader className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-spin" />
+                <h3 className="text-2xl font-semibold text-white mb-2">Searching...</h3>
+                <p className="text-slate-400">Finding the perfect courses for you</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="text-center">
+              <div className="bg-red-900/20 backdrop-blur-sm border border-red-700/30 rounded-2xl p-12">
+                <X className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-semibold text-red-400 mb-2">Search Error</h3>
+                <p className="text-slate-400">{error}</p>
+                <button
+                  onClick={() => setError(null)}
+                  className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          ) : hasSearched ? (
+            searchResults.length > 0 ? (
+              <div>
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-white mb-2">Search Results</h2>
+                  <p className="text-slate-400">Found {searchResults.length} course{searchResults.length !== 1 ? 's' : ''} for "{searchTerm}"</p>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {searchResults.map((course) => (
+                    <CourseCard key={course._id} course={course} navigate={navigate} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-12">
+                  <SearchIcon className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+                  <h3 className="text-2xl font-semibold text-slate-400 mb-2">No Results Found</h3>
+                  <p className="text-slate-500">
+                    No courses found for "{searchTerm}". Try different keywords or browse our popular searches above.
+                  </p>
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="text-center">
+              <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/30 rounded-2xl p-12">
+                <SearchIcon className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-semibold text-slate-400 mb-2">Start Your Search</h3>
+                <p className="text-slate-500">Enter a keyword or select filters to find the perfect course for you</p>
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>
+  );
+};
+
+// CourseCard component for displaying individual course results
+const CourseCard = ({ course, navigate }) => {
+  const formatPrice = (price, discount = 0) => {
+    if (price === 0) return 'Free';
+    const discountedPrice = price - (price * discount / 100);
+    return `$${discountedPrice.toFixed(2)}`;
+  };
+
+  const formatDuration = (duration) => {
+    if (!duration) return 'N/A';
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
+    return `${hours}h ${minutes}m`;
+  };
+
+  const getAverageRating = (ratings) => {
+    if (!ratings || ratings.length === 0) return 0;
+    const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0);
+    return (sum / ratings.length).toFixed(1);
+  };
+
+  const handleViewCourse = () => {
+    navigate(`/course/${course._id}`);
+  };
+
+  return (
+    <motion.div
+      whileHover={{ y: -5, scale: 1.02 }}
+      transition={{ duration: 0.3 }}
+      className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:border-slate-600/50 transition-all duration-300"
+    >
+      {/* Course Thumbnail */}
+      <div className="relative h-48 bg-gradient-to-br from-slate-700 to-slate-800">
+        {course.thumbnail ? (
+          <img
+            src={course.thumbnail}
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <BookOpen className="w-16 h-16 text-slate-500" />
+          </div>
+        )}
+        
+        {/* Price Badge */}
+        <div className="absolute top-4 right-4">
+          <span className="px-3 py-1 bg-blue-600 text-white text-sm font-semibold rounded-full">
+            {formatPrice(course.price, course.discount)}
+          </span>
+          {course.discount > 0 && (
+            <span className="block text-xs text-slate-300 line-through mt-1">
+              ${course.price.toFixed(2)}
+            </span>
+          )}
+        </div>
+
+        {/* Published Badge */}
+        {course.isPublished && (
+          <div className="absolute top-4 left-4">
+            <span className="px-2 py-1 bg-green-600 text-white text-xs font-medium rounded-full">
+              Live
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Course Content */}
+      <div className="p-6">
+        {/* Title */}
+        <h3 className="text-xl font-semibold text-white mb-2 overflow-hidden" 
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+            }}>
+          {course.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-slate-400 text-sm mb-4 overflow-hidden"
+           style={{
+             display: '-webkit-box',
+             WebkitLineClamp: 3,
+             WebkitBoxOrient: 'vertical',
+           }}>
+          {course.description}
+        </p>
+
+        {/* Course Stats */}
+        <div className="flex items-center justify-between mb-4 text-sm">
+          <div className="flex items-center text-slate-400">
+            <Clock className="w-4 h-4 mr-1" />
+            <span>{formatDuration(course.totalDuration)}</span>
+          </div>
+          
+          <div className="flex items-center text-slate-400">
+            <Users className="w-4 h-4 mr-1" />
+            <span>{course.enrolledStudents?.length || 0} students</span>
+          </div>
+          
+          <div className="flex items-center text-yellow-400">
+            <Star className="w-4 h-4 mr-1 fill-current" />
+            <span>{getAverageRating(course.ratings)}</span>
+          </div>
+        </div>
+
+        {/* Educator */}
+        <div className="flex items-center mb-4">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
+            {course.educator?.avatar ? (
+              <img
+                src={course.educator.avatar}
+                alt={course.educator.name}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-white text-sm font-medium">
+                {course.educator?.name?.charAt(0) || 'E'}
+              </span>
+            )}
+          </div>
+          <div>
+            <p className="text-white text-sm font-medium">
+              {course.educator?.name || 'Anonymous Educator'}
+            </p>
+            <p className="text-slate-400 text-xs">Educator</p>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <button 
+          onClick={handleViewCourse}
+          className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+        >
+          View Course
+        </button>
+      </div>
+    </motion.div>
   );
 };
 

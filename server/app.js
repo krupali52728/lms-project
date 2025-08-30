@@ -23,35 +23,31 @@ app.use(morgan('dev'));
 // CORS configuration
 app.use(cors({
   origin: [
-    'http://localhost:5173', // Local development
+    'http://localhost:5173', 
     'https://advanced-lms.vercel.app' 
   ],
   credentials: true
 }));
 
-// Cookie parser middleware
 app.use(cookieParser());
 
 // Conditional middleware - skip body parsing for file upload routes
 app.use((req, res, next) => {
-  // Skip body parsing for lecture upload routes
+  
   if (req.path.includes('/api/lecture/') && req.method === 'POST' && 
       req.get('Content-Type')?.includes('multipart/form-data')) {
     return next();
   }
   
-  // Apply body parsing for other routes
   express.json({ limit: '50mb' })(req, res, next);
 });
 
 app.use((req, res, next) => {
-  // Skip URL encoding for file upload routes
   if (req.path.includes('/api/lecture/') && req.method === 'POST' && 
       req.get('Content-Type')?.includes('multipart/form-data')) {
     return next();
   }
   
-  // Apply URL encoding for other routes
   express.urlencoded({ limit: '50mb', extended: true })(req, res, next);
 });
 

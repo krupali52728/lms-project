@@ -99,3 +99,30 @@ export const checkPurchaseStatus = async(courseId) => {
         throw error.response?.data || { message: "Something went wrong" };
     }
 }
+
+//search course
+export const searchCourses = async (query, filters = {}) => {
+    try {
+        let url = `course/search?query=${encodeURIComponent(query)}`;
+        
+        // Add filters to the URL if provided
+        if (filters.category && filters.category !== 'All') {
+            url += `&category=${encodeURIComponent(filters.category)}`;
+        }
+        if (filters.level && filters.level !== 'All') {
+            url += `&level=${encodeURIComponent(filters.level)}`;
+        }
+        if (filters.minPrice !== undefined) {
+            url += `&minPrice=${filters.minPrice}`;
+        }
+        if (filters.maxPrice !== undefined) {
+            url += `&maxPrice=${filters.maxPrice}`;
+        }
+        
+        const res = await api.get(url);
+        return res.data;
+    } catch (error) {
+        console.log("Search courses error:", error.response?.data || error.message);
+        throw error.response?.data || { message: "Something went wrong" };
+    }
+}

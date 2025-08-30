@@ -9,13 +9,15 @@ import {
   togglePublishCourse,
   enrollInCourse,
   checkPurchaseStatus,
-  updateCourse
+  updateCourse,
+  searchCourses
 } from '../controllers/course.controllers.js';
 
 const courseRouter = express.Router();
 
 // Public routes (no authentication required)
 courseRouter.get('/all', getAllCourses); 
+courseRouter.get('/search', searchCourses);
 
 // Protected routes (authentication required)
 courseRouter.post('/create', authenticate, authorize('educator'), createCourse); 

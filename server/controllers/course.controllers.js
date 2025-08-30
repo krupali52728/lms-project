@@ -306,3 +306,61 @@ export const updateCourse = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 }
+
+//search controllers 
+export const searchCourses = async(req,res)=>{
+  try {
+    const { query, category, level, minPrice, maxPrice } = req.query;
+    
+    // Build search conditions
+    let searchConditions = {
+      isPublished: true, // Only return published courses
+    };
+
+    // Text search across title, description
+    if (query && query.trim()) {
+      searchConditions.$or = [
+        { title: { $regex: query.trim(), $options: "i" } },
+        { description: { $regex: query.trim(), $options: "i" } }
+      ];
+    }
+
+    // Category filter (if category field exists in model)
+    if (category && category !== 'All') {
+      searchConditions.category = { $regex: category, $options: "i" };
+    }
+
+    // Level filter (if difficulty field exists in model)
+    if (level && level !== 'All') {
+      searchConditions.difficulty = { $regex: level, $options: "i" };
+    }
+
+    // Price range filter
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      searchConditions.price = {};
+      if (minPrice !== undefined) {
+        searchConditions.price.$gte = parseFloat(minPrice);
+      }
+      if (maxPrice !== undefined) {
+        searchConditions.price.$lte = parseFloat(maxPrice);
+      }
+    }
+
+    const courses = await Course.find(searchConditions)
+      .populate("educator", "name email avatar")
+      .populate("chapters")
+      .sort({ createdAt: -1 })
+      .limit(50); // Limit results to prevent overload
+
+    res.status(200).json({ 
+      success: true, 
+      data: courses,
+      count: courses.length,
+      searchTerm: query || '',
+      filters: { category, level, minPrice, maxPrice }
+    });
+  } catch (error) {
+   res.status(500).json({ success: false, message: error.message }); 
+   console.log("Search courses error:", error.message);
+  }
+}

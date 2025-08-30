@@ -6,12 +6,7 @@ import { uploadVideoToCloudinary } from "../config/multer.js";
 
 // Create a new lecture
 export const createLecture = async (req, res) => {
-  console.log('=== LECTURE CREATION DEBUG ===');
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  console.log('File:', req.file);
-  console.log('Params:', req.params);
-  console.log('Content-Type:', req.get('Content-Type'));
+  
   
   try {
     const { courseId, chapterId } = req.params;
@@ -25,7 +20,6 @@ export const createLecture = async (req, res) => {
     
     const { userId } = req.user;
 
-    console.log('Extracted data:', { title, description, content, duration, order });
 
     // Validate required fields
     if (!title || !title.trim()) {
