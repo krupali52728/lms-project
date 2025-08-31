@@ -57,23 +57,39 @@ const EducatorAnalytics = () => {
     try {
       setLoading(true);
       setError('');
+      
+      // Ensure user is authenticated and is an educator
+      if (!user || user.role !== 'educator') {
+        setError('Access denied. Only educators can view analytics.');
+        return;
+      }
+
       const response = await getEducatorAnalytics(timeRange);
-      if (response.success) {
+      if (response.success && response.data) {
         setAnalyticsData(response.data);
       } else {
         setError(response.message || 'Failed to fetch analytics');
       }
     } catch (err) {
       console.error('Analytics fetch error:', err);
-      setError(err.message || 'Failed to fetch analytics data');
+      setError(err.response?.data?.message || err.message || 'Failed to fetch analytics data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAnalytics();
-  }, [timeRange]);
+    if (user && user.role === 'educator') {
+      fetchAnalytics();
+    }
+  }, [timeRange, user]);
+
+  useEffect(() => {
+    // Initial load when user is available
+    if (user && user.role === 'educator') {
+      fetchAnalytics();
+    }
+  }, [user]);
 
   const handleRefresh = () => {
     fetchAnalytics();
@@ -238,7 +254,7 @@ const EducatorAnalytics = () => {
         {/* Main Content */}
         {!loading && !error && (
           <>
-            {analyticsData.overview.totalCourses === 0 ? (
+            {analyticsData.overview.totalCourses === 0 && analyticsData.overview.totalRevenue === 0 ? (
               <EmptyAnalytics />
             ) : (
               <>
@@ -252,35 +268,36 @@ const EducatorAnalytics = () => {
                 >
               <StatCard
                 title="Total Revenue"
-                value={analyticsData.overview.totalRevenue.toLocaleString()}
-                change={analyticsData.overview.revenueChange}
+                value={analyticsData.overview.totalRevenue?.toLocaleString('en-IN') || '0'}
+                change={analyticsData.overview.revenueChange || 0}
                 icon={DollarSign}
                 color="bg-gradient-to-r from-green-500 to-emerald-600"
-                prefix="$"
+                prefix="₹"
               />
               
               <StatCard
                 title="Total Students"
-                value={analyticsData.overview.totalStudents.toLocaleString()}
-                change={analyticsData.overview.studentsChange}
+                value={analyticsData.overview.totalStudents?.toLocaleString('en-IN') || '0'}
+                change={analyticsData.overview.studentsChange || 0}
                 icon={Users}
                 color="bg-gradient-to-r from-blue-500 to-blue-600"
               />
               
               <StatCard
                 title="Published Courses"
-                value={analyticsData.overview.totalCourses}
-                change={analyticsData.overview.coursesChange}
+                value={analyticsData.overview.totalCourses || 0}
+                change={analyticsData.overview.coursesChange || 0}
                 icon={BookOpen}
                 color="bg-gradient-to-r from-purple-500 to-purple-600"
               />
               
               <StatCard
                 title="Average Rating"
-                value={analyticsData.overview.avgRating.toFixed(1)}
-                change={analyticsData.overview.ratingChange}
+                value={analyticsData.overview.avgRating > 0 ? analyticsData.overview.avgRating?.toFixed(1) : 'No ratings yet'}
+                change={analyticsData.overview.ratingChange || 0}
                 icon={Star}
                 color="bg-gradient-to-r from-yellow-500 to-orange-600"
+                suffix={analyticsData.overview.avgRating > 0 ? '/5' : ''}
               />
             </motion.div>
 
@@ -313,27 +330,27 @@ const EducatorAnalytics = () => {
                   {analyticsData.chartData && analyticsData.chartData.length > 0 ? (
                     <div className="space-y-4">
                       <div className="text-sm text-slate-400 mb-4">
-                        Revenue trend for the last {timeRange}
+                        Revenue trend for the last {timeRange === '7d' ? '7 days' : timeRange === '30d' ? '30 days' : timeRange === '90d' ? '3 months' : '1 year'}
                       </div>
-                      {/* Simple chart representation */}
+                      {/* Real chart data visualization */}
                       <div className="grid grid-cols-7 gap-2 h-64">
                         {analyticsData.chartData.map((data, index) => {
-                          const maxRevenue = Math.max(...analyticsData.chartData.map(d => d.revenue));
-                          const height = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
+                          const maxRevenue = Math.max(...analyticsData.chartData.map(d => d.revenue || 0));
+                          const height = maxRevenue > 0 ? ((data.revenue || 0) / maxRevenue) * 100 : 0;
                           return (
                             <div key={index} className="flex flex-col items-center">
                               <div className="flex-1 flex items-end">
                                 <div 
                                   className="w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-t-sm min-h-[4px]"
                                   style={{ height: `${height}%` }}
-                                  title={`$${data.revenue} on ${data.date}`}
+                                  title={`₹${data.revenue || 0} on ${data.date}`}
                                 />
                               </div>
                               <div className="text-xs text-slate-500 mt-2 text-center">
-                                {data.date.split('/')[1]}/{data.date.split('/')[2]}
+                                {new Date(data.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                               </div>
                               <div className="text-xs text-slate-400 font-medium">
-                                ${data.revenue}
+                                ₹{data.revenue || 0}
                               </div>
                             </div>
                           );
@@ -360,12 +377,12 @@ const EducatorAnalytics = () => {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-slate-300 text-sm">Completion Rate</span>
-                      <span className="text-white font-medium">{analyticsData.studentEngagement.completionRate}%</span>
+                      <span className="text-white font-medium">{analyticsData.studentEngagement.completionRate || 0}%</span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div 
                         className="h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-600"
-                        style={{ width: `${analyticsData.studentEngagement.completionRate}%` }}
+                        style={{ width: `${analyticsData.studentEngagement.completionRate || 0}%` }}
                       />
                     </div>
                   </div>
@@ -373,14 +390,14 @@ const EducatorAnalytics = () => {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-slate-300 text-sm">Avg. Time Spent</span>
-                      <span className="text-white font-medium">{analyticsData.studentEngagement.avgTimeSpent}h</span>
+                      <span className="text-white font-medium">{analyticsData.studentEngagement.avgTimeSpent || 0}h</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-blue-400" />
                       <div className="flex-1 bg-slate-700 rounded-full h-2">
                         <div 
                           className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
-                          style={{ width: `${Math.min(analyticsData.studentEngagement.avgTimeSpent * 10, 100)}%` }}
+                          style={{ width: `${Math.min((analyticsData.studentEngagement.avgTimeSpent || 0) * 10, 100)}%` }}
                         />
                       </div>
                     </div>
@@ -389,14 +406,19 @@ const EducatorAnalytics = () => {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-slate-300 text-sm">Satisfaction Score</span>
-                      <span className="text-white font-medium">{analyticsData.studentEngagement.satisfactionScore}/5</span>
+                      <span className="text-white font-medium">
+                        {analyticsData.studentEngagement.satisfactionScore > 0 
+                          ? `${analyticsData.studentEngagement.satisfactionScore?.toFixed(1)}/5`
+                          : 'No ratings'
+                        }
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Star className="w-4 h-4 text-yellow-400" />
                       <div className="flex-1 bg-slate-700 rounded-full h-2">
                         <div 
                           className="h-2 rounded-full bg-gradient-to-r from-yellow-500 to-orange-600"
-                          style={{ width: `${(analyticsData.studentEngagement.satisfactionScore / 5) * 100}%` }}
+                          style={{ width: `${((analyticsData.studentEngagement.satisfactionScore || 0) / 5) * 100}%` }}
                         />
                       </div>
                     </div>
@@ -405,7 +427,7 @@ const EducatorAnalytics = () => {
                   <div className="pt-4 border-t border-slate-700">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-400">Drop-off Rate</span>
-                      <span className="text-red-400">{analyticsData.studentEngagement.dropoffRate}%</span>
+                      <span className="text-red-400">{analyticsData.studentEngagement.dropoffRate || 0}%</span>
                     </div>
                   </div>
                 </div>
@@ -423,28 +445,28 @@ const EducatorAnalytics = () => {
               <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-6">Top Performing Courses</h3>
                 
-                {analyticsData.topCourses.length === 0 ? (
+                {analyticsData.topCourses && analyticsData.topCourses.length === 0 ? (
                   <div className="text-center py-8">
                     <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     <p className="text-slate-400">No course performance data yet</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {analyticsData.topCourses.map((course, index) => (
-                      <div key={course.id} className="flex items-center space-x-4 p-4 bg-slate-900/30 border border-slate-700 rounded-xl">
+                    {analyticsData.topCourses?.map((course, index) => (
+                      <div key={course.id || index} className="flex items-center space-x-4 p-4 bg-slate-900/30 border border-slate-700 rounded-xl">
                         <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                           <span className="text-white font-bold text-sm">{index + 1}</span>
                         </div>
                         <div className="flex-1">
                           <h4 className="text-white font-medium">{course.title}</h4>
-                          <p className="text-slate-400 text-sm">{course.students} students • ${course.revenue}</p>
+                          <p className="text-slate-400 text-sm">{course.students} students • ₹{course.revenue?.toLocaleString('en-IN') || 0}</p>
                         </div>
                         <div className="text-right">
-                          <div className="text-green-400 font-bold">${course.revenue}</div>
+                          <div className="text-green-400 font-bold">₹{course.revenue?.toLocaleString('en-IN') || 0}</div>
                           <p className="text-slate-500 text-sm">Revenue</p>
                         </div>
                       </div>
-                    ))}
+                    )) || []}
                   </div>
                 )}
               </div>
@@ -453,22 +475,28 @@ const EducatorAnalytics = () => {
               <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-6">Recent Activity</h3>
                 
-                {analyticsData.recentActivity.length === 0 ? (
+                {analyticsData.recentActivity && analyticsData.recentActivity.length === 0 ? (
                   <div className="text-center py-8">
                     <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                     <p className="text-slate-400">No recent activity</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {analyticsData.recentActivity.map((activity, index) => (
+                    {analyticsData.recentActivity?.map((activity, index) => (
                       <div key={index} className="flex items-start space-x-4 p-4 bg-slate-900/30 border border-slate-700 rounded-xl">
                         <div className="w-2 h-2 bg-blue-400 rounded-full mt-3"></div>
                         <div className="flex-1">
                           <p className="text-white text-sm">{activity.description}</p>
-                          <p className="text-slate-500 text-xs mt-1">{activity.time}</p>
+                          <p className="text-slate-500 text-xs mt-1">
+                            {new Date(activity.time).toLocaleDateString('en-IN', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </p>
                         </div>
                       </div>
-                    ))}
+                    )) || []}
                   </div>
                 )}
               </div>

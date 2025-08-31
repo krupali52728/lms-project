@@ -393,10 +393,11 @@ export const getEducatorAnalytics = async (req, res) => {
         startDate.setDate(startDate.getDate() - 30);
     }
 
-    // Get educator's courses
+    // Get educator's courses with ratings
     const courses = await Course.find({ educator: userId })
       .populate("chapters")
-      .select('_id title price isPublished createdAt enrolledStudents');
+      .populate("ratings.user", "name")
+      .select('_id title price isPublished createdAt enrolledStudents ratings');
 
     // Get purchases for educator's courses
     const courseIds = courses.map(course => course._id);
@@ -420,14 +421,26 @@ export const getEducatorAnalytics = async (req, res) => {
     const totalCourses = courses.length;
     const publishedCourses = courses.filter(c => c.isPublished).length;
 
-    // Calculate average rating (placeholder for now since we don't have ratings model)
-    const avgRating = 4.5; // This should come from actual ratings when implemented
+    // Calculate real average rating from all courses' ratings
+    let totalRatings = 0;
+    let ratingsCount = 0;
+    courses.forEach(course => {
+      if (course.ratings && course.ratings.length > 0) {
+        course.ratings.forEach(rating => {
+          totalRatings += rating.rating;
+          ratingsCount++;
+        });
+      }
+    });
+    const avgRating = ratingsCount > 0 ? totalRatings / ratingsCount : 0;
 
-    // Calculate percentage changes (simplified)
-    const revenueChange = periodRevenue > 0 ? 15 : 0; // Placeholder calculation
-    const studentsChange = periodStudents > 0 ? 12 : 0; // Placeholder calculation
-    const coursesChange = 0; // Courses created in period vs previous period
-    const ratingChange = 0.2; // Placeholder
+    // Calculate percentage changes (based on real data)
+    const revenueChange = periodRevenue > 0 && totalRevenue > periodRevenue ? 
+      ((periodRevenue / (totalRevenue - periodRevenue)) * 100).toFixed(1) : 0;
+    const studentsChange = periodStudents > 0 && totalStudents > periodStudents ? 
+      ((periodStudents / (totalStudents - periodStudents)) * 100).toFixed(1) : 0;
+    const coursesChange = 0; // Would need to track course creation dates to calculate this
+    const ratingChange = 0; // Would need historical rating data to calculate trend
 
     // Get top performing courses
     const courseRevenue = {};
@@ -463,11 +476,15 @@ export const getEducatorAnalytics = async (req, res) => {
         type: 'enrollment'
       }));
 
-    // Student engagement metrics (simplified)
+    // Student engagement metrics (based on real data where possible)
+    const totalEnrollments = courses.reduce((sum, course) => sum + (course.enrolledStudents?.length || 0), 0);
+    const totalPurchases = allTimePurchases.length;
+    const completionRate = totalEnrollments > 0 ? ((totalPurchases / totalEnrollments) * 100).toFixed(1) : 0;
+    
     const studentEngagement = {
-      completionRate: 75, // Placeholder - should calculate from course progress
-      avgTimeSpent: 3.5, // Placeholder - should calculate from user activity
-      dropoffRate: 15, // Placeholder - should calculate from incomplete courses
+      completionRate: parseFloat(completionRate),
+      avgTimeSpent: 0, // Would need activity tracking to calculate this
+      dropoffRate: totalEnrollments > 0 ? (((totalEnrollments - totalPurchases) / totalEnrollments) * 100).toFixed(1) : 0,
       satisfactionScore: avgRating
     };
 

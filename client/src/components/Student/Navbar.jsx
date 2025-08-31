@@ -9,7 +9,6 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  Heart,
   BookOpen,
   
 } from "lucide-react";
@@ -395,15 +394,6 @@ const Navbar = () => {
                       >
                         <Settings className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
                         <span className="font-medium">Account Settings</span>
-                      </Link>
-                      
-                      <Link
-                        to="/student/wishlist"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center space-x-3 p-4 text-slate-300 hover:text-pink-400 hover:bg-slate-800/50 rounded-xl transition-all duration-200 group"
-                      >
-                        <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Wishlist</span>
                       </Link>
 
                       <hr className="border-slate-700/50 my-4" />

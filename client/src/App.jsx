@@ -28,6 +28,7 @@ import NotFound from './pages/NotFound.jsx';
 
 import './index.css';
 import AllCourse from './components/course/AllCourse.jsx';
+import About from './components/Student/About.jsx';
 
 function App() {
   return (
@@ -73,6 +74,7 @@ function App() {
                   <Route path="/forgot-password/verify-otp" element={<ForgotPasswordOTP />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/verify-otp" element={<OTPVerification />} />
+                  <Route path="/about" element={<About />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/course/:id" element={<CourseDetails />} />
                   <Route path="/course" element={<AllCourse />} /> 
