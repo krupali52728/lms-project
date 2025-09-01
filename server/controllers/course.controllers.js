@@ -3,6 +3,7 @@ import Chapter from "../model/chapter.model.js";
 import Lecture from "../model/lecture.model.js";
 import User from "../model/user.model.js";
 import Purchase from "../model/purchase.model.js";
+import { uploadImageToCloudinary } from "../config/multer.js";
 
 
 //create course
@@ -276,36 +277,164 @@ export const checkPurchaseStatus = async (req, res) => {
 
 export const updateCourse = async (req, res) => {
   try {
-    const {courseId} = req.params;
-    const {title, description, category, price, difficulty, duration, thumbnail, tags, requirements, objectives, isPublished, status} = req.body;
-
-    // Validate request body
+    console.log('=== UPDATE COURSE DEBUG ===');
+    console.log('Course ID:', req.params.courseId);
+    console.log('User ID:', req.user.userId);
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+    console.log('Content-Type:', req.headers['content-type']);
     
-
-    // Find course by ID
+    const { courseId } = req.params;
+    const { userId } = req.user;
+    
+    // Find course by ID and check ownership
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
 
-    // Update course fields
-    course.title = title;
-    course.description = description;
-    course.category = category;
-    course.price = price;
-    course.difficulty = difficulty;
-    course.duration = duration;
-    course.thumbnail = thumbnail;
-    course.tags = tags;
-    course.requirements = requirements;
-    course.objectives = objectives;
-    course.isPublished = isPublished;
-    course.status = status;
+    // Check if user is the educator of this course
+    if (course.educator.toString() !== userId.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "You are not authorized to update this course" 
+      });
+    }
+
+    let updateData = {};
+    let thumbnailUrl = null;
+
+    // Handle file upload (FormData) vs regular JSON request
+    if (req.file) {
+      // This is a FormData request with a thumbnail file
+      const {
+        title,
+        description,
+        category,
+        price,
+        discount,
+        level,
+        language,
+        isPublished,
+        estimatedDuration,
+        requirements,
+        whatYouWillLearn,
+        tags
+      } = req.body;
+
+      console.log('FormData fields:', {
+        title,
+        description,
+        category,
+        price,
+        discount,
+        level,
+        language,
+        isPublished,
+        estimatedDuration,
+        requirements,
+        whatYouWillLearn,
+        tags
+      });
+
+      // Upload thumbnail to Cloudinary
+      try {
+        const fileName = `course-thumbnail-${courseId}-${Date.now()}`;
+        const uploadResult = await uploadImageToCloudinary(req.file.buffer, fileName);
+        thumbnailUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        console.error('Thumbnail upload error:', uploadError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Failed to upload thumbnail" 
+        });
+      }
+
+      updateData = {
+        title: title?.trim(),
+        description: description?.trim(),
+        category: category || '',
+        price: price ? parseFloat(price) : 0,
+        discount: discount ? parseFloat(discount) : 0,
+        level: level || 'beginner',
+        language: language || 'English',
+        isPublished: isPublished === 'true' || isPublished === true,
+        estimatedDuration: estimatedDuration ? parseFloat(estimatedDuration) : 0,
+        requirements: requirements ? JSON.parse(requirements) : [],
+        whatYouWillLearn: whatYouWillLearn ? JSON.parse(whatYouWillLearn) : [],
+        tags: tags ? JSON.parse(tags) : [],
+        thumbnail: thumbnailUrl
+      };
+    } else {
+      // This is a regular JSON request
+      const {
+        title,
+        description,
+        category,
+        price,
+        discount,
+        level,
+        language,
+        isPublished,
+        estimatedDuration,
+        requirements,
+        whatYouWillLearn,
+        tags,
+        thumbnail
+      } = req.body;
+
+      console.log('JSON fields:', {
+        title,
+        description,
+        category,
+        price,
+        discount,
+        level,
+        language,
+        isPublished,
+        estimatedDuration,
+        requirements,
+        whatYouWillLearn,
+        tags,
+        thumbnail
+      });
+
+      updateData = {
+        title: title?.trim(),
+        description: description?.trim(),
+        category: category || '',
+        price: price ?? 0,
+        discount: discount ?? 0,
+        level: level || 'beginner',
+        language: language || 'English',
+        isPublished: Boolean(isPublished),
+        estimatedDuration: estimatedDuration ?? 0,
+        requirements: requirements || [],
+        whatYouWillLearn: whatYouWillLearn || [],
+        tags: tags || [],
+        thumbnail: thumbnail
+      };
+    }
+
+    console.log('Final update data:', updateData);
+
+    // Update course with new data
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] !== undefined && updateData[key] !== null) {
+        course[key] = updateData[key];
+      }
+    });
 
     await course.save();
 
-    res.status(200).json({ success: true, message: "Course updated successfully", course });
+    console.log('Course updated successfully');
+    res.status(200).json({ 
+      success: true, 
+      message: "Course updated successfully", 
+      course 
+    });
   } catch (error) {
+    console.error('Update course error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 }

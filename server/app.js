@@ -34,18 +34,26 @@ app.use(cookieParser());
 // Conditional middleware - skip body parsing for file upload routes
 app.use((req, res, next) => {
   
-  if (req.path.includes('/api/lecture/') && req.method === 'POST' && 
-      req.get('Content-Type')?.includes('multipart/form-data')) {
-    return next();
+  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
+      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
+      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
+      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
+    if (req.get('Content-Type')?.includes('multipart/form-data')) {
+      return next();
+    }
   }
   
   express.json({ limit: '50mb' })(req, res, next);
 });
 
 app.use((req, res, next) => {
-  if (req.path.includes('/api/lecture/') && req.method === 'POST' && 
-      req.get('Content-Type')?.includes('multipart/form-data')) {
-    return next();
+  if ((req.path.includes('/api/lecture/') && req.method === 'POST') || 
+      (req.path.includes('/api/course/') && req.path.includes('/update') && req.method === 'PATCH') ||
+      (req.path.includes('/api/user/profile/upload-avatar') && req.method === 'POST') ||
+      (req.path.includes('/api/video/upload') && req.method === 'POST')) {
+    if (req.get('Content-Type')?.includes('multipart/form-data')) {
+      return next();
+    }
   }
   
   express.urlencoded({ limit: '50mb', extended: true })(req, res, next);

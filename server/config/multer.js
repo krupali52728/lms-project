@@ -27,8 +27,7 @@ export const uploadVideoToCloudinary = async (fileBuffer, fileName) => {
           resource_type: 'video',
           folder: 'lms-videos',
           public_id: fileName,
-          quality: 'auto',
-          format: 'mp4'
+          quality: 'auto:good'
         },
         (error, result) => {
           if (error) {
@@ -53,8 +52,8 @@ export const uploadImageToCloudinary = async (fileBuffer, fileName) => {
           resource_type: 'image',
           folder: 'lms-thumbnails',
           public_id: fileName,
-          quality: 'auto',
-          format: 'jpg'
+          quality: 'auto:good',
+          fetch_format: 'auto'
         },
         (error, result) => {
           if (error) {
@@ -79,11 +78,10 @@ export const uploadProfilePictureToCloudinary = async (fileBuffer, fileName) => 
           resource_type: 'image',
           folder: 'lms-profile-pictures',
           public_id: fileName,
-          quality: 'auto',
-          format: 'jpg',
+          quality: 'auto:good',
+          fetch_format: 'auto',
           transformation: [
-            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
-            { quality: 'auto' }
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' }
           ]
         },
         (error, result) => {
