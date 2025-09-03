@@ -4,123 +4,106 @@ import Lecture from "../model/lecture.model.js";
 import User from "../model/user.model.js";
 import { uploadVideoToCloudinary } from "../config/multer.js";
 
-// Create a new lecture
+
 export const createLecture = async (req, res) => {
-  
-  
   try {
     const { courseId, chapterId } = req.params;
-    
-    // Handle the case where multer processes the fields
-    const title = req.body?.title || '';
-    const description = req.body?.description || '';
-    const content = req.body?.content || '';
-    const duration = parseInt(req.body?.duration) || 0;
-    const order = parseInt(req.body?.order) || 1;
-    
+    const { title, description, content, duration, order } = req.body;
     const { userId } = req.user;
 
-
-    // Validate required fields
+    // Validations
     if (!title || !title.trim()) {
-      console.log('Title validation failed:', title);
-      return res.status(400).json({
-        success: false,
-        message: "Lecture title is required"
-      });
+      return res.status(400).json({ success: false, message: "Lecture title is required" });
     }
-
     if (!req.file) {
-      console.log('File validation failed:', req.file);
-      return res.status(400).json({
-        success: false,
-        message: "Video file is required"
+      return res.status(400).json({ success: false, message: "Video file is required" });
+    }
+
+    // Check course & educator
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ success: false, message: "Course not found" });
+    if (course.educator.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: "Not authorized to add lectures" });
+    }
+
+    // Check chapter
+    const chapter = await Chapter.findOne({ _id: chapterId, course: courseId });
+    if (!chapter) return res.status(404).json({ success: false, message: "Chapter not found" });
+
+    // Upload video to Cloudinary with retry logic
+    let videoUrl = "";
+    let publicId = "";
+    try {
+      const fileName = `lecture_${courseId}_${chapterId}_${Date.now()}`;
+      console.log(`Starting video upload for file: ${fileName}`);
+      
+      // Retry logic for video upload
+      let uploadResult;
+      let retries = 3;
+      
+      while (retries > 0) {
+        try {
+          uploadResult = await uploadVideoToCloudinary(req.file.buffer, fileName);
+          break; // Success, exit retry loop
+        } catch (uploadError) {
+          retries--;
+          console.log(`Upload attempt failed, retries left: ${retries}`, uploadError.message);
+          
+          if (retries === 0) {
+            throw uploadError; // Final attempt failed
+          }
+          
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, (3 - retries) * 2000));
+        }
+      }
+      
+      videoUrl = uploadResult.secure_url;
+      publicId = uploadResult.public_id;
+      console.log(`Video upload successful: ${videoUrl}`);
+    } catch (err) {
+      console.error("Video upload error:", err);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Failed to upload video. Please try again with a smaller file or check your internet connection.",
+        error: err.message 
       });
     }
 
-    // Verify course exists and user is the educator
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Course not found" });
-    }
-
-    if (course.educator.toString() !== userId.toString()) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Not authorized to add lectures to this course",
-        });
-    }
-
-    // Verify chapter exists and belongs to the course
-    const chapter = await Chapter.findOne({ _id: chapterId, course: courseId });
-    if (!chapter) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Chapter not found in this course" });
-    }
-
-    // Handle video upload if provided
-    let videoUrl = '';
-    if (req.file) {
-      try {
-        const fileName = `lecture_${courseId}_${chapterId}_${Date.now()}`;
-        const uploadResult = await uploadVideoToCloudinary(req.file.buffer, fileName);
-        videoUrl = uploadResult.secure_url;
-      } catch (uploadError) {
-        console.error('Video upload error:', uploadError);
-        return res.status(500).json({
-          success: false,
-          message: "Failed to upload video file"
-        });
-      }
-    }
-
-    // Check if lecture order already exists in this chapter
-    const existingLecture = await Lecture.findOne({
-      chapter: chapterId,
-      order: order,
-    });
+    // Check order uniqueness
+    const existingLecture = await Lecture.findOne({ chapter: chapterId, order: parseInt(order) });
     if (existingLecture) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Lecture order already exists in this chapter",
-        });
+      return res.status(400).json({ success: false, message: "Lecture order already exists" });
     }
 
-    // Create the lecture
+    // Save lecture
     const lecture = new Lecture({
       course: courseId,
       chapter: chapterId,
       title: title.trim(),
-      description: description,
-      content: content,
+      description,
+      content,
       videoUrl,
-      duration: duration,
-      order: order,
+      publicId, // save Cloudinary public ID for future delete
+      duration: parseInt(duration) || 0,
+      order: parseInt(order) || 1,
     });
 
     await lecture.save();
 
-    // Add lecture to chapter content
+    // Update chapter & course
     chapter.chapterContent.push(lecture._id);
     await chapter.save();
-
-    // Add lecture to course lectures
     course.lectures.push(lecture._id);
     await course.save();
 
     res.status(201).json({ success: true, lecture });
   } catch (error) {
-    console.error('Create lecture error:', error);
+    console.error("Create lecture error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // Get all lectures for a chapter
 export const getLecturesByChapter = async (req, res) => {

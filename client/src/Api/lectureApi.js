@@ -2,7 +2,20 @@ import api from './config.js';
 
 export const createLecture = async (courseId, chapterId, lectureData) => {
   try {
-    const res = await api.post(`/lecture/${courseId}/${chapterId}`, lectureData);
+    // Create a special config for video uploads with extended timeout
+    const config = {
+      timeout: 600000, // 10 minutes for video uploads
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        console.log(`Upload Progress: ${percentCompleted}%`);
+        // You can use this to show upload progress to the user
+      }
+    };
+    
+    const res = await api.post(`/lecture/${courseId}/${chapterId}`, lectureData, config);
     return res.data;
   } catch (error) {
     console.log("Create lecture error:", error.response?.data || error.message);

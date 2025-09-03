@@ -4,6 +4,7 @@ import axios from "axios";
 const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api", // Backend base URL
   withCredentials: true, // useful for cookies/JWT
+  timeout: 300000, // 5 minutes timeout for all requests
 });
 
 // Add interceptors (optional, for tokens, logging, errors)
