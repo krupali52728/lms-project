@@ -35,7 +35,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="text-center text-[#94a3b8] text-xs pt-1">
-          <p>© {new Date().getFullYear()} CourseConnect Education Platform</p>
+          <p>© {new Date().getFullYear()} Skillify Education Platform</p>
         </div>
       </div>
     </footer>

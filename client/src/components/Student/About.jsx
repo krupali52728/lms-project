@@ -118,7 +118,7 @@ const About = () => {
               About{' '}
             </span>
             <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-              CourseConnect
+              Skillify
             </span>
           </motion.h1>
           
@@ -149,7 +149,7 @@ const About = () => {
                 Our Mission
               </h2>
               <p className="text-lg text-slate-300 mb-6 leading-relaxed">
-                At CourseConnect, we believe that quality education should be accessible to everyone, 
+                At Skillify, we believe that quality education should be accessible to everyone, 
                 everywhere. Our mission is to democratize learning by providing world-class courses 
                 that bridge the gap between traditional education and industry requirements.
               </p>
@@ -227,7 +227,7 @@ const About = () => {
             className="text-4xl font-bold text-white text-center mb-12"
             variants={fadeInUp}
           >
-            Why Choose CourseConnect?
+            Why Choose Skillify?
           </motion.h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -364,7 +364,7 @@ const About = () => {
             Ready to Start Your Learning Journey?
           </h2>
           <p className="text-xl text-slate-300 mb-8">
-            Join thousands of students who have transformed their careers with CourseConnect
+            Join thousands of students who have transformed their careers with Skillify
           </p>
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center"

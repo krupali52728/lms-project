@@ -2,7 +2,7 @@ import transporter from "../config/nodemailer.js";
 
 // Constants
 const EMAIL_CONFIG = {
-  SENDER_NAME: "CourseConnect LMS Platform",
+  SENDER_NAME: "Skillify LMS Platform",
   SENDER_EMAIL: process.env.SENDER_EMAIL,
   OTP_EXPIRY_MINUTES: 10,
   RESET_TOKEN_EXPIRY_HOURS: 1,
@@ -177,7 +177,7 @@ const createEmailTemplate = (title, content) => {
           ${content}
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} CourseConnect LMS Platform. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} Skillify LMS Platform. All rights reserved.</p>
           <div class="footer-links">
             <a href="#">Privacy Policy</a> |
             <a href="#">Terms of Service</a> |
@@ -209,7 +209,7 @@ export const sendOTPEmail = async (email, otp, name) => {
   const content = `
     <div class="greeting">Hello ${name}! 👋</div>
     <div class="message">
-      Welcome to CourseConnect LMS Platform! We're excited to have you join our learning community.
+      Welcome to Skillify LMS Platform! We're excited to have you join our learning community.
       <br><br>
       To complete your registration and verify your email address, please use the verification code below:
     </div>
@@ -234,7 +234,7 @@ export const sendOTPEmail = async (email, otp, name) => {
   const mailOptions = {
     from: `"${EMAIL_CONFIG.SENDER_NAME}" <${EMAIL_CONFIG.SENDER_EMAIL}>`,
     to: email,
-    subject: "🔐 Verify Your Email - CourseConnect LMS Platform",
+    subject: "🔐 Verify Your Email - Skillify LMS Platform",
     html: createEmailTemplate("Email Verification", content),
   };
 
@@ -251,7 +251,7 @@ export const sendWelcomeEmail = async (email, name) => {
   const content = `
     <div class="greeting">Welcome aboard, ${name}! 🎉</div>
     <div class="message">
-      Congratulations on successfully joining CourseConnect LMS Platform! Your account has been verified and you're all set to begin your learning journey.
+      Congratulations on successfully joining Skillify LMS Platform! Your account has been verified and you're all set to begin your learning journey.
       <br><br>
       Here's what you can do now:
       <ul style="color: #666666; line-height: 1.8;">
@@ -278,7 +278,7 @@ export const sendWelcomeEmail = async (email, name) => {
   const mailOptions = {
     from: `"${EMAIL_CONFIG.SENDER_NAME}" <${EMAIL_CONFIG.SENDER_EMAIL}>`,
     to: email,
-    subject: "🎉 Welcome to CourseConnect LMS Platform!",
+    subject: "🎉 Welcome to Skillify LMS Platform!",
     html: createEmailTemplate("Welcome", content),
   };
 
@@ -296,7 +296,7 @@ export const sendPasswordResetOTP = async (email, name, resetOTP) => {
   const content = `
     <div class="greeting">Hello ${name},</div>
     <div class="message">
-      We received a request to reset your password for your CourseConnect LMS Platform account.
+      We received a request to reset your password for your Skillify LMS Platform account.
       <br><br>
       If you requested this password reset, please use the verification code below:
     </div>
@@ -319,7 +319,7 @@ export const sendPasswordResetOTP = async (email, name, resetOTP) => {
   const mailOptions = {
     from: `"${EMAIL_CONFIG.SENDER_NAME}" <${EMAIL_CONFIG.SENDER_EMAIL}>`,
     to: email,
-    subject: "🔐 Password Reset Code - CourseConnect LMS Platform",
+    subject: "🔐 Password Reset Code - Skillify LMS Platform",
     html: createEmailTemplate("Password Reset", content),
   };
 
@@ -339,7 +339,7 @@ export const sendPasswordResetEmail = async (email, name, resetToken) => {
   const content = `
     <div class="greeting">Hello ${name},</div>
     <div class="message">
-      We received a request to reset your password for your CourseConnect Learning Platform account.
+      We received a request to reset your password for your Skillify Learning Platform account.
       <br><br>
       If you requested this password reset, click the button below to create a new password:
     </div>
@@ -365,7 +365,7 @@ export const sendPasswordResetEmail = async (email, name, resetToken) => {
   const mailOptions = {
     from: `"${EMAIL_CONFIG.SENDER_NAME}" <${EMAIL_CONFIG.SENDER_EMAIL}>`,
     to: email,
-    subject: "🔐 Reset Your Password - CourseConnect LMS Platform",
+    subject: "🔐 Reset Your Password - Skillify LMS Platform",
     html: createEmailTemplate("Password Reset", content),
   };
 
@@ -565,7 +565,7 @@ export const validateEmailConfig = async () => {
  */
 export const getEmailServiceStatus = () => {
   return {
-    service: "CourseConnect Learning Email Service",
+    service: "Skillify Learning Email Service",
     version: "2.0.0",
     provider: "Brevo SMTP",
     features: [
