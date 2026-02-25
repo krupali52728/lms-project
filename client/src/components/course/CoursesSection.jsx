@@ -14,18 +14,16 @@ const CoursesSection = () => {
 
   const fetchCourses = async () => {
     try {
-      console.log("Fetching all courses...");
-      setLoading(true);
+            setLoading(true);
       setError(null);
       const response = await getAllCourses();
-      console.log("Courses API response:", response);
+      
       
       if (response.success && response.courses) {
         // Get only first 6 courses for featured section
         const courses = response.courses.slice(0, 6);
         setFeaturedCourses(courses);
-        console.log("Featured courses set:", courses);
-        // Small delay to ensure state update is complete
+                // Small delay to ensure state update is complete
         setTimeout(() => setIsVisible(true), 100);
       } else {
         throw new Error(response.message || "Failed to fetch courses");

@@ -5,4 +5,3 @@ export * from './userApi.js';
 export * from './chapterApi.js';
 export * from './lectureApi.js';
 export * from './videoApi.js';
-export * from './paymentApi.js';

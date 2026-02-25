@@ -1,4 +1,4 @@
-import React from 'react';
+//import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -61,12 +61,11 @@ const StudentLayout = () => {
   }
 
   // Render nested routes for students and educators (educators can also be students)
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      {/* You can add student-specific navigation, sidebar, or header here */}
-      <Outlet />
-    </div>
-  );
-};
+  // Render nested routes for students and educators
+return (
+  <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+    <Outlet />
+  </div>
+)}
 
 export default StudentLayout;

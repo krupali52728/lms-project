@@ -122,7 +122,7 @@ export const getAllStudentsAndEducators = async () => {
   try {
     const res = await api.get("/user/all-students-and-educators");
 
-    console.log("All Students and Educators:", res.data);
+    
 
     return res.data;
   } catch (error) {

@@ -18,7 +18,6 @@ import {
 import { getCourseById } from '../../Api/courseApi.js';
 import { checkCoursePurchase } from '../../Api/userApi.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import StripeCheckoutButton from '../Payment/StripeCheckoutButton';
 import Rating from '../Student/Rating.jsx';
 import ReviewsList from './ReviewsList.jsx';
 import './CourseDetails.css';
@@ -32,7 +31,7 @@ const CourseDetails = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null)
   const [purchaseStatus, setPurchaseStatus] = useState({
     isEnrolled: false,
     hasPurchased: false,
@@ -51,8 +50,7 @@ const CourseDetails = () => {
       
       if (response.success && response.course) {
         setCourse(response.course);
-        console.log("Course details set:", response.course);
-        
+             
         // Check if user has already rated this course
         if (isLoggedIn && user && response.course.ratings) {
           const existingRating = response.course.ratings.find(
@@ -111,9 +109,8 @@ const CourseDetails = () => {
     }
 
     try {
-      console.log("Checking purchase status for course:", courseId);
-      const response = await checkCoursePurchase(courseId);
-      console.log("Purchase status response:", response);
+      
+      
       
       if (response.success) {
         setPurchaseStatus({
@@ -123,7 +120,7 @@ const CourseDetails = () => {
         });
       }
     } catch (error) {
-      console.error("Error checking purchase status:", error);
+     
       setPurchaseStatus({
         isEnrolled: false,
         hasPurchased: false,
@@ -133,8 +130,7 @@ const CourseDetails = () => {
   };
 
   useEffect(() => {
-    console.log("CourseDetails component mounted with courseId:", courseId);
-    if (courseId) {
+        if (courseId) {
       fetchCourseDetails();
     } else {
       console.error("No courseId found in URL parameters");
@@ -665,11 +661,7 @@ const CourseDetails = () => {
                       </button>
                     ) : course.isPublished ? (
                       <div className="space-y-2">
-                        <StripeCheckoutButton
-                          course={course}
-                          buttonText="Enroll Now"
-                          className="w-full py-3 md:py-4 font-semibold rounded-lg md:rounded-xl bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-green-500/25 text-sm md:text-base"
-                        />
+                       
                         
                       </div>
                     ) : (

@@ -95,7 +95,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <span className="text-2xl font-bold text-white">
-              Course<span className="text-blue-400">Connect</span>
+              Skillify
             </span>
           </Link>
 

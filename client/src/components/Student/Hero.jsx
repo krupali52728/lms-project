@@ -389,13 +389,6 @@ const Hero = () => {
               >
                 {/* Course Thumbnail */}
                 <div className="relative h-44 overflow-hidden">
-                  <img
-                    src={course.thumbnail || course.image || '/api/placeholder/320/200'}
-                    alt={course.title}
-                    loading="lazy"
-                    onError={(e) => { e.target.onerror = null; e.target.src = '/api/placeholder/320/200'; }}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
                     {course.category}

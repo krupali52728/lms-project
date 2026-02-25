@@ -10,11 +10,10 @@ import courseRouter from './routes/course.routes.js';
 import chapterRouter from './routes/chapter.routes.js';
 import lectureRouter from './routes/lecture.routes.js';
 import videoRouter from './routes/video.routes.js';
-import paymentRouter from './routes/payment.routes.js';
 import morgan from 'morgan';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 dotenv.config();
 
@@ -88,7 +87,6 @@ app.use('/api/chapter', chapterRouter);
 
 app.use('/api/lecture', lectureRouter);
 
-app.use('/api/payment',paymentRouter);
 
 const server = app.listen(PORT,()=>{
     console.log("Server Started on port", PORT);

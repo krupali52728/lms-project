@@ -47,8 +47,7 @@ const AllCourse = () => {
       setError('');
       const response = await getAllCourses();
       
-      console.log("All courses response:", response);
-      
+          
       if (response?.success) {
         setCourses(response.courses || []);
       } else {

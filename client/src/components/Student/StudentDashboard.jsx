@@ -200,6 +200,22 @@ const StudentDashboard = () => {
 
         {/* Stats Cards */}
         <motion.div
+  variants={fadeInUp}
+  className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6"
+>
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-slate-400 text-sm">Attendance</p>
+      <p className="text-3xl font-bold text-white mt-1">92%</p>
+      <p className="text-green-400 text-sm mt-1">Good Standing</p>
+    </div>
+    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+      <Calendar className="w-6 h-6 text-green-400" />
+    </div>
+  </div>
+</motion.div>
+
+        <motion.div
           variants={fadeInUp}
           initial="initial"
           animate="animate"
@@ -586,6 +602,16 @@ const StudentDashboard = () => {
                   <BarChart3 className="w-4 h-4 text-white" />
                   <span className="text-white text-sm font-medium">View Progress</span>
                 </button>
+                <button
+  onClick={() => navigate("/student/attendance")}
+  className="w-full flex items-center space-x-3 p-3 bg-slate-700 rounded-lg hover:bg-slate-600 transition-all duration-200"
+>
+  <Calendar className="w-4 h-4 text-white" />
+  <span className="text-white text-sm font-medium">
+    View Attendance
+  </span>
+</button>
+
                 
                 
               </div>

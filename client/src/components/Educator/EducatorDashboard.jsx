@@ -98,12 +98,7 @@ const EducatorDashboard = () => {
           totalEducators: educators.length
         });
         
-        console.log('Platform Stats:', {
-          totalUsers: allUsers.length,
-          totalStudents: students.length,
-          totalEducators: educators.length,
-          allUsers
-        });
+        
       }
     } catch (err) {
       setError(err.message || 'Failed to fetch dashboard data');
